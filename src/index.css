@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Bebas+Neue&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Bebas Neue", sans-serif;
+  --font-sans: "Barlow Condensed", sans-serif;
+  
+  --color-brand-primary: #CC1818;
+  --color-brand-accent: #F5A396;
+  --color-brand-dark: #070707;
+  --color-brand-card: #121212;
+  --color-brand-gray: #ACACAC;
+}
+
+/* Custom class for Bebas Neue font for easy usage if needed */
+.font-bebas {
+  font-family: 'Bebas Neue', display, sans-serif;
+}
+
+.font-barlow {
+  font-family: 'Barlow Condensed', sans-serif;
+}
