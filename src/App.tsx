@@ -4,12 +4,14 @@
  */
 
 import React from 'react';
+import { AuthProvider } from './context/AuthContext';
 import { InventoryProvider, useInventory } from './context/InventoryContext';
 import { Navigation } from './components/Navigation';
 import { HomeView } from './components/HomeView';
 import { CatalogView } from './components/CatalogView';
 import { ConsignmentView } from './components/ConsignmentView';
 import { AdminDashboard } from './components/AdminDashboard';
+import { LoginPage } from './components/LoginPage';
 import { Car, MapPin, Calendar, Clock, Sparkles } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -17,7 +19,7 @@ const MainAppContent: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-dark text-white selection:bg-brand-primary selection:text-white font-sans">
-      
+
       {/* Top Banner Navigation bar */}
       <Navigation />
 
@@ -26,6 +28,7 @@ const MainAppContent: React.FC = () => {
         {activeTab === 'home' && <HomeView />}
         {activeTab === 'catalog' && <CatalogView />}
         {activeTab === 'consignment' && <ConsignmentView />}
+        {activeTab === 'login' && <LoginPage />}
         {activeTab === 'admin' && <AdminDashboard />}
       </main>
 
@@ -33,7 +36,7 @@ const MainAppContent: React.FC = () => {
       {!adminViewMode && (
         <footer className="bg-brand-dark border-t border-neutral-900 pt-16 pb-8" id="system-luxury-footer">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
-            
+
             {/* Column 1: Brand Info */}
             <div className="md:col-span-4 space-y-4">
               <div className="flex items-center space-x-2.5">
@@ -99,8 +102,10 @@ const MainAppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <InventoryProvider>
-      <MainAppContent />
-    </InventoryProvider>
+    <AuthProvider>
+      <InventoryProvider>
+        <MainAppContent />
+      </InventoryProvider>
+    </AuthProvider>
   );
 }

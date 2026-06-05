@@ -4,11 +4,13 @@
  */
 
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useInventory } from '../context/InventoryContext';
 import { Car, Lock, Eye, ShoppingCart, Coins, ShieldCheck, Settings } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
   const { activeTab, setActiveTab, adminViewMode, setAdminViewMode } = useInventory();
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-neutral-900 bg-brand-dark/95 backdrop-blur-md">
@@ -83,6 +85,10 @@ export const Navigation: React.FC = () => {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => {
+              if (!adminViewMode && !user) {
+                setActiveTab('login');
+                return;
+              }
               const nextMode = !adminViewMode;
               setAdminViewMode(nextMode);
               if (nextMode) {

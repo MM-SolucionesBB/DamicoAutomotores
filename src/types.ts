@@ -36,4 +36,4 @@ export interface ConsignmentRequest {
   creadoEn: string;
 }
 
-export type ActiveTab = 'home' | 'catalog' | 'consignment' | 'admin';
+export type ActiveTab = 'home' | 'catalog' | 'consignment' | 'admin' | 'login';

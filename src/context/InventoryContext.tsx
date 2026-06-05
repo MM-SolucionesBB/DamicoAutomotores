@@ -1,11 +1,7 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Vehicle, ConsignmentRequest, ActiveTab } from '../types';
 import { INITIAL_VEHICLES } from '../mockData';
+import { supabase } from '../supabase';
 
 interface InventoryContextProps {
   vehicles: Vehicle[];
@@ -25,6 +21,7 @@ interface InventoryContextProps {
   setSearchFilter: (term: string) => void;
   bodyTypeFilter: string;
   setBodyTypeFilter: (type: string) => void;
+  loading: boolean;
 }
 
 const InventoryContext = createContext<InventoryContextProps | undefined>(undefined);
@@ -37,97 +34,161 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [bodyTypeFilter, setBodyTypeFilter] = useState<string>('');
+  const [loading, setLoading] = useState(true);
 
-  // Initial load
   useEffect(() => {
-    const cachedVehicles = localStorage.getItem('damico_vehicles');
-    if (cachedVehicles) {
-      try {
-        setVehicles(JSON.parse(cachedVehicles));
-      } catch (e) {
+    fetchVehicles();
+    fetchConsignments();
+  }, []);
+
+  const fetchVehicles = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select('*')
+      .order('creadoEn', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching vehicles from Supabase:', error.message);
+      const cached = localStorage.getItem('damico_vehicles');
+      if (cached) {
+        try {
+          setVehicles(JSON.parse(cached));
+        } catch {
+          setVehicles(INITIAL_VEHICLES);
+        }
+      } else {
         setVehicles(INITIAL_VEHICLES);
+        localStorage.setItem('damico_vehicles', JSON.stringify(INITIAL_VEHICLES));
       }
     } else {
-      setVehicles(INITIAL_VEHICLES);
-      localStorage.setItem('damico_vehicles', JSON.stringify(INITIAL_VEHICLES));
+      setVehicles(data || []);
+      localStorage.setItem('damico_vehicles', JSON.stringify(data || []));
     }
+    setLoading(false);
+  };
 
-    const cachedConsignments = localStorage.getItem('damico_consignments');
-    if (cachedConsignments) {
-      try {
-        setConsignments(JSON.parse(cachedConsignments));
-      } catch (e) {
+  const fetchConsignments = async () => {
+    const { data, error } = await supabase
+      .from('consignments')
+      .select('*')
+      .order('creadoEn', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching consignments from Supabase:', error.message);
+      const cached = localStorage.getItem('damico_consignments');
+      if (cached) {
+        try {
+          setConsignments(JSON.parse(cached));
+        } catch {
+          setConsignments([]);
+        }
+      } else {
         setConsignments([]);
       }
     } else {
-      const defaultConsignments: ConsignmentRequest[] = [
-        {
-          id: 'consign-1',
-          nombre: 'Juan Pérez',
-          celular: '+5491122334455',
-          marca: 'Toyota',
-          modelo: 'Corolla',
-          anio: 2018,
-          version: 'SE-G 1.8 CVT',
-          kilometraje: 72000,
-          precioPretendido: 16500,
-          estado: 'Pendiente',
-          creadoEn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-      setConsignments(defaultConsignments);
-      localStorage.setItem('damico_consignments', JSON.stringify(defaultConsignments));
+      setConsignments(data || []);
+      localStorage.setItem('damico_consignments', JSON.stringify(data || []));
     }
-  }, []);
-
-  // Sync state to local storage
-  const saveVehicles = (newVehicles: Vehicle[]) => {
-    setVehicles(newVehicles);
-    localStorage.setItem('damico_vehicles', JSON.stringify(newVehicles));
   };
 
-  const saveConsignments = (newConsignments: ConsignmentRequest[]) => {
-    setConsignments(newConsignments);
-    localStorage.setItem('damico_consignments', JSON.stringify(newConsignments));
-  };
-
-  const addVehicle = (vehicleData: Omit<Vehicle, 'id' | 'creadoEn'>) => {
-    const id = `${vehicleData.marca.toLowerCase()}-${vehicleData.modelo.toLowerCase()}-${Date.now()}`;
-    const newVehicle: Vehicle = {
+  const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'creadoEn'>) => {
+    const newVehicle = {
       ...vehicleData,
-      id,
       creadoEn: new Date().toISOString()
     };
-    saveVehicles([newVehicle, ...vehicles]);
+    const { data, error } = await supabase
+      .from('vehicles')
+      .insert(newVehicle)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding vehicle to Supabase:', error.message);
+      const localVehicle: Vehicle = {
+        ...newVehicle,
+        id: `${vehicleData.marca.toLowerCase()}-${vehicleData.modelo.toLowerCase()}-${Date.now()}`
+      };
+      setVehicles(prev => [localVehicle, ...prev]);
+      localStorage.setItem('damico_vehicles', JSON.stringify([localVehicle, ...vehicles]));
+    } else if (data) {
+      setVehicles(prev => [data as Vehicle, ...prev]);
+      localStorage.setItem('damico_vehicles', JSON.stringify([data as Vehicle, ...vehicles]));
+    }
   };
 
-  const updateVehicle = (id: string, updated: Partial<Vehicle>) => {
+  const updateVehicle = async (id: string, updated: Partial<Vehicle>) => {
+    const { error } = await supabase
+      .from('vehicles')
+      .update(updated)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating vehicle in Supabase:', error.message);
+    }
+
     const updatedVehicles = vehicles.map(v => (v.id === id ? { ...v, ...updated } : v));
-    saveVehicles(updatedVehicles);
+    setVehicles(updatedVehicles);
+    localStorage.setItem('damico_vehicles', JSON.stringify(updatedVehicles));
   };
 
-  const deleteVehicle = (id: string) => {
+  const deleteVehicle = async (id: string) => {
+    const { error } = await supabase
+      .from('vehicles')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting vehicle from Supabase:', error.message);
+    }
+
     const filtered = vehicles.filter(v => v.id !== id);
-    saveVehicles(filtered);
+    setVehicles(filtered);
+    localStorage.setItem('damico_vehicles', JSON.stringify(filtered));
     if (selectedVehicleId === id) {
       setSelectedVehicleId(null);
     }
   };
 
-  const addConsignment = (reqData: Omit<ConsignmentRequest, 'id' | 'creadoEn' | 'estado'>) => {
-    const id = `consign-${Date.now()}`;
-    const newReq: ConsignmentRequest = {
+  const addConsignment = async (reqData: Omit<ConsignmentRequest, 'id' | 'creadoEn' | 'estado'>) => {
+    const newReq = {
       ...reqData,
-      id,
-      estado: 'Pendiente',
+      estado: 'Pendiente' as const,
       creadoEn: new Date().toISOString()
     };
-    saveConsignments([newReq, ...consignments]);
+    const { data, error } = await supabase
+      .from('consignments')
+      .insert(newReq)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding consignment to Supabase:', error.message);
+      const localReq: ConsignmentRequest = {
+        ...newReq,
+        id: `consign-${Date.now()}`
+      };
+      setConsignments(prev => [localReq, ...prev]);
+      localStorage.setItem('damico_consignments', JSON.stringify([localReq, ...consignments]));
+    } else if (data) {
+      setConsignments(prev => [data as ConsignmentRequest, ...prev]);
+      localStorage.setItem('damico_consignments', JSON.stringify([data as ConsignmentRequest, ...consignments]));
+    }
   };
 
-  const updateConsignmentStatus = (id: string, status: ConsignmentRequest['estado']) => {
+  const updateConsignmentStatus = async (id: string, status: ConsignmentRequest['estado']) => {
+    const { error } = await supabase
+      .from('consignments')
+      .update({ estado: status })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating consignment in Supabase:', error.message);
+    }
+
     const updated = consignments.map(c => (c.id === id ? { ...c, estado: status } : c));
-    saveConsignments(updated);
+    setConsignments(updated);
+    localStorage.setItem('damico_consignments', JSON.stringify(updated));
   };
 
   const setActiveTab = (tab: ActiveTab) => {
@@ -154,7 +215,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         searchFilter,
         setSearchFilter,
         bodyTypeFilter,
-        setBodyTypeFilter
+        setBodyTypeFilter,
+        loading
       }}
     >
       {children}
