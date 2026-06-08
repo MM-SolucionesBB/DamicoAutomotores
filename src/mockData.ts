@@ -18,6 +18,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     transmision: 'Automática',
     traccion: '4x4',
     combustible: 'Diesel',
+    carroceria: 'Pick-up',
     imagen: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200',
     imagenesSecundarias: [
       'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=600',
@@ -40,6 +41,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     transmision: 'Automática',
     traccion: '4x4',
     combustible: 'Diesel',
+    carroceria: 'Pick-up',
     imagen: 'https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&q=80&w=1200',
     imagenesSecundarias: [
       'https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&q=80&w=600',
@@ -62,6 +64,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     transmision: 'Automática',
     traccion: '4x4',
     combustible: 'Diesel',
+    carroceria: 'Pick-up',
     imagen: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=80&w=1200',
     imagenesSecundarias: [
       'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=80&w=600',
@@ -83,6 +86,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     transmision: 'Automática',
     traccion: '4x2',
     combustible: 'Nafta',
+    carroceria: 'SUV',
     imagen: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=1200',
     imagenesSecundarias: [
       'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600',
@@ -104,6 +108,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     transmision: 'Automática',
     traccion: 'AWD',
     combustible: 'Nafta',
+    carroceria: 'Deportivos',
     imagen: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200',
     imagenesSecundarias: [
       'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600',
@@ -125,6 +130,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     transmision: 'Automática',
     traccion: '4x2',
     combustible: 'Híbrido',
+    carroceria: 'Sedán',
     imagen: 'https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&q=80&w=1200',
     imagenesSecundarias: [
       'https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&q=80&w=600',
@@ -146,6 +152,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     transmision: 'Automática',
     traccion: 'RWD',
     combustible: 'Nafta',
+    carroceria: 'Sedán',
     imagen: 'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&q=80&w=1200',
     imagenesSecundarias: [
       'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&q=80&w=600',
@@ -167,6 +174,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     transmision: 'Automática',
     traccion: '4x4',
     combustible: 'Diesel',
+    carroceria: 'SUV',
     imagen: 'https://images.unsplash.com/photo-1525609004556-c46c7d6cf0a3?auto=format&fit=crop&q=80&w=1200',
     imagenesSecundarias: [
       'https://images.unsplash.com/photo-1525609004556-c46c7d6cf0a3?auto=format&fit=crop&q=80&w=600',

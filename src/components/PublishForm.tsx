@@ -1,13 +1,49 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { Vehicle } from '../types';
-import { X, Save, Image as ImageIcon, Camera, HelpCircle, FileText, Check } from 'lucide-react';
+import { X, Save, Image as ImageIcon, Camera, HelpCircle, FileText, Check, Trash2, Plus, Upload } from 'lucide-react';
 import { AVAILABLE_BRANDS } from '../mockData';
+
+// Image compression utility using HTML5 Canvas to keep base64 strings small (max 1200px width/height, quality 0.7)
+const compressImage = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 850;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        // Compress to JPEG with 0.7 quality to keep size under ~120KB
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(dataUrl);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
 
 interface PublishFormProps {
   mode: 'create' | 'edit';
@@ -65,9 +101,47 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
   const [transmision, setTransmision] = useState<'Manual' | 'Automática'>('Automática');
   const [traccion, setTraccion] = useState<'4x2' | '4x4' | 'AWD' | 'RWD'>('4x4');
   const [combustible, setCombustible] = useState<'Nafta' | 'Diesel' | 'Nafta/GNC' | 'Híbrido' | 'Eléctrico'>('Diesel');
+  const [carroceria, setCarroceria] = useState<Vehicle['carroceria']>('SUV');
   const [imagen, setImagen] = useState('');
+  const [imagenesSecundarias, setImagenesSecundarias] = useState<string[]>([]);
   const [destacado, setDestacado] = useState(false);
   const [estado, setEstado] = useState<'Disponible' | 'Reservado' | 'Vendido'>('Disponible');
+
+  const mainImageInputRef = useRef<HTMLInputElement>(null);
+  const secondaryImagesInputRef = useRef<HTMLInputElement>(null);
+
+  const handleMainImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const compressed = await compressImage(file);
+        setImagen(compressed);
+      } catch (err) {
+        console.error("Error compressing image:", err);
+        alert("Error al procesar la imagen.");
+      }
+    }
+  };
+
+  const handleSecondaryImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const newImages: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        try {
+          const compressed = await compressImage(files[i]);
+          newImages.push(compressed);
+        } catch (err) {
+          console.error("Error compressing secondary image:", err);
+        }
+      }
+      setImagenesSecundarias(prev => [...prev, ...newImages]);
+    }
+  };
+
+  const removeSecondaryImage = (indexToRemove: number) => {
+    setImagenesSecundarias(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
 
   // Load existing vehicle data if editing
   useEffect(() => {
@@ -84,7 +158,9 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
         setTransmision(match.transmision);
         setTraccion(match.traccion);
         setCombustible(match.combustible);
+        setCarroceria(match.carroceria || 'SUV');
         setImagen(match.imagen);
+        setImagenesSecundarias(match.imagenesSecundarias || []);
         setDestacado(match.destacado);
         setEstado(match.estado);
       }
@@ -100,7 +176,9 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
       setTransmision('Automática');
       setTraccion('4x4');
       setCombustible('Diesel');
+      setCarroceria('SUV');
       setImagen(PRESET_VEHICLE_IMAGES[0].url); // select first preset as default
+      setImagenesSecundarias([]);
       setDestacado(false);
       setEstado('Disponible');
     }
@@ -113,13 +191,6 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
       return;
     }
 
-    // Set secondary mockup photos automatically based on the main image for carousel
-    const imagenesSecundarias = [
-      imagen,
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600',
-      'https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&q=80&w=600'
-    ];
-
     const currentData = {
       marca,
       modelo,
@@ -131,6 +202,7 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
       transmision,
       traccion,
       combustible,
+      carroceria,
       imagen,
       imagenesSecundarias,
       destacado,
@@ -225,7 +297,7 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
             </div>
 
             {/* Año */}
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-3">
               <label className="font-sans text-[11px] text-neutral-400 uppercase block mb-1.5 font-bold">Año Modelo (Fabricación) *</label>
               <input 
                 type="number"
@@ -240,7 +312,7 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
             </div>
 
             {/* Precio en USD */}
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-3">
               <label className="font-sans text-[11px] text-neutral-400 uppercase block mb-1.5 font-bold">Precio pretendido (USD) *</label>
               <input 
                 type="number"
@@ -254,7 +326,7 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
             </div>
 
             {/* Kilometraje */}
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-3">
               <label className="font-sans text-[11px] text-neutral-400 uppercase block mb-1.5 font-bold">Kilometraje (KM) *</label>
               <input 
                 type="number"
@@ -265,6 +337,23 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
                 className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-xl p-3 focus:outline-none text-white font-sans"
                 id="form-input-mileage"
               />
+            </div>
+
+            {/* Carrocería */}
+            <div className="lg:col-span-3">
+              <label className="font-sans text-[11px] text-neutral-400 uppercase block mb-1.5 font-bold">Carrocería *</label>
+              <select
+                value={carroceria}
+                onChange={(e) => setCarroceria(e.target.value as any)}
+                className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-xl p-3 focus:outline-none text-white font-sans uppercase tracking-wider"
+                id="form-input-body-type"
+              >
+                <option value="SUV">SUV</option>
+                <option value="Pick-up">Pick-up</option>
+                <option value="Sedán">Sedán</option>
+                <option value="Hatchback">Hatchback</option>
+                <option value="Deportivos">Deportivos</option>
+              </select>
             </div>
           </div>
         </div>
@@ -341,71 +430,149 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
         </div>
 
         {/* Section 3: Fotografía e Imagen */}
-        <div id="publish-section-multimedia">
-          <h3 className="font-display text-lg uppercase tracking-wider text-white border-b border-neutral-900 pb-2 mb-2 flex items-center gap-2">
-            <span className="h-4 w-1 bg-brand-primary rounded"></span>
-            3. Recurso Fotográfico (Imagen Principal)
-          </h3>
-          
-          <p className="font-sans text-xs text-neutral-500 mb-4 font-bold uppercase leading-relaxed">
-            Escriba una URL de imagen válida o elija un modelo pre-seleccionado en alta definición de nuestra galería recomendada.
-          </p>
+        <div id="publish-section-multimedia" className="space-y-6">
+          <div>
+            <h3 className="font-display text-lg uppercase tracking-wider text-white border-b border-neutral-900 pb-2 mb-2 flex items-center gap-2">
+              <span className="h-4 w-1 bg-brand-primary rounded"></span>
+              3. Imagen Principal del Vehículo
+            </h3>
+            <p className="font-sans text-xs text-neutral-500 mb-4 font-bold uppercase leading-relaxed">
+              Cargue una foto desde su PC (se comprimirá automáticamente) o ingrese una URL pública.
+            </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* Selected Photo visual block */}
-            <div className="lg:col-span-4 aspect-video lg:h-36 rounded-xl overflow-hidden border border-neutral-800 bg-[#161616] relative">
-              {imagen ? (
-                <img src={imagen} alt="Preview" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex flex-col items-center justify-center text-neutral-600 h-full">
-                  <Camera className="h-8 w-8 mb-1" />
-                  <span className="font-sans text-[9px] font-bold">S/FOTO PREVIA</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+              {/* Preview Box */}
+              <div className="lg:col-span-4 aspect-video lg:h-36 rounded-xl overflow-hidden border border-neutral-800 bg-[#161616] relative flex items-center justify-center">
+                {imagen ? (
+                  <img src={imagen} alt="Preview Principal" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-neutral-600">
+                    <Camera className="h-8 w-8 mb-1" />
+                    <span className="font-sans text-[9px] font-bold">SIN FOTO PRINCIPAL</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload controls */}
+              <div className="lg:col-span-8 space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-grow">
+                    <label className="font-sans text-[11px] text-neutral-400 uppercase block mb-1.5 font-bold">Dirección URL de Imagen (Opcional)</label>
+                    <input 
+                      type="text"
+                      placeholder="Pegue una URL pública..."
+                      value={imagen.startsWith('data:') ? '' : imagen}
+                      onChange={(e) => setImagen(e.target.value)}
+                      className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-xl p-3 focus:outline-none placeholder-neutral-600 text-white font-mono text-xs"
+                      id="form-input-image-url"
+                    />
+                  </div>
+                  <div className="sm:self-end">
+                    <input 
+                      type="file"
+                      ref={mainImageInputRef}
+                      onChange={handleMainImageChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => mainImageInputRef.current?.click()}
+                      className="w-full bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800 text-white font-sans text-xs uppercase font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all h-[46px]"
+                    >
+                      <Upload className="h-4 w-4 text-brand-primary" />
+                      Subir de PC
+                    </button>
+                  </div>
                 </div>
-              )}
+
+                {/* Gallery presets */}
+                <div>
+                  <span className="font-sans text-[11px] text-neutral-500 uppercase block mb-2 font-bold select-none">Galería de Muestras Rápidas (Presioná para elegir):</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {PRESET_VEHICLE_IMAGES.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setImagen(preset.url)}
+                        className={`relative h-12 rounded-lg overflow-hidden border transition-all text-left ${
+                          imagen === preset.url ? 'border-brand-primary scale-[1.02]' : 'border-neutral-900 hover:border-neutral-800'
+                        }`}
+                        id={`gallery-preset-selector-${idx}`}
+                      >
+                        <img src={preset.url} alt="Preset" referrerPolicy="no-referrer" className="h-full w-full object-cover opacity-60" />
+                        <div className="absolute inset-x-1 bottom-1 text-[8px] bg-neutral-950/80 text-white truncate px-1 rounded uppercase font-sans">
+                          {preset.label}
+                        </div>
+                        {imagen === preset.url && (
+                          <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-brand-primary text-white flex items-center justify-center">
+                            <Check className="h-2 w-2" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary images */}
+          <div className="border-t border-neutral-900 pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <strong className="text-white block font-display text-lg uppercase tracking-wider">Fotos del Vehículo (Galería Secundaria)</strong>
+                <p className="text-neutral-500 font-sans text-xs uppercase font-bold">
+                  Suba fotos adicionales desde su PC (panorámica, interior, motor, etc.) para el carrusel de detalles.
+                </p>
+              </div>
+              <div>
+                <input 
+                  type="file"
+                  ref={secondaryImagesInputRef}
+                  onChange={handleSecondaryImagesChange}
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => secondaryImagesInputRef.current?.click()}
+                  className="bg-brand-primary/10 border border-brand-primary/20 hover:bg-brand-primary/20 text-brand-primary font-sans text-xs uppercase font-bold py-2 px-3 rounded-xl flex items-center gap-1.5 cursor-pointer transition-all"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Añadir fotos
+                </button>
+              </div>
             </div>
 
-            {/* Preset selecting visual slider */}
-            <div className="lg:col-span-8 space-y-3.5">
-              <div>
-                <label className="font-sans text-[11px] text-neutral-400 uppercase block mb-1.5 font-bold">Dirección URL de Imagen Principal *</label>
-                <input 
-                  type="text"
-                  required
-                  placeholder="Pegue una URL pública..."
-                  value={imagen}
-                  onChange={(e) => setImagen(e.target.value)}
-                  className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-xl p-3 focus:outline-none placeholder-neutral-600 text-white font-mono text-xs"
-                  id="form-input-image-url"
-                />
-              </div>
-
-              {/* Gallery presets items lists */}
-              <div>
-                <span className="font-sans text-[11px] text-neutral-500 uppercase block mb-2 font-bold select-none">Galería de Muestras Rápidas (Presioná para elegir):</span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {PRESET_VEHICLE_IMAGES.map((preset, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setImagen(preset.url)}
-                      className={`relative h-12 rounded-lg overflow-hidden border transition-all text-left ${
-                        imagen === preset.url ? 'border-brand-primary scale-[1.02]' : 'border-neutral-900 hover:border-neutral-800'
-                      }`}
-                      id={`gallery-preset-selector-${idx}`}
-                    >
-                      <img src={preset.url} alt="Preset thumb" referrerPolicy="no-referrer" className="h-full w-full object-cover opacity-60" />
-                      <div className="absolute inset-x-1 bottom-1 text-[8px] bg-neutral-950/80 text-white truncate px-1 rounded uppercase font-sans">
-                        {preset.label}
-                      </div>
-                      {imagen === preset.url && (
-                        <div className="absolute top-1 right-1 h-3 w-3 rounded-full bg-brand-primary text-white flex items-center justify-center">
-                          <Check className="h-2 w-2" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
+            {/* Grid display of uploaded photos */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 mt-4">
+              {imagenesSecundarias.length === 0 ? (
+                <div className="col-span-full border border-dashed border-neutral-800 rounded-2xl p-6 text-center text-neutral-600 font-sans text-xs uppercase font-bold select-none font-bold">
+                  Aún no se cargaron fotos secundarias.
                 </div>
-              </div>
+              ) : (
+                imagenesSecundarias.map((imgUrl, idx) => (
+                  <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-neutral-800 bg-[#161616] group">
+                    <img src={imgUrl} alt={`Secundaria ${idx + 1}`} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                    
+                    {/* Floating delete button */}
+                    <button
+                      type="button"
+                      onClick={() => removeSecondaryImage(idx)}
+                      className="absolute top-1.5 right-1.5 h-6 w-6 rounded-md bg-neutral-950/80 hover:bg-rose-950/90 text-neutral-400 hover:text-rose-400 border border-neutral-800 flex items-center justify-center cursor-pointer transition-all shadow-md"
+                      title="Eliminar foto"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+
+                    <div className="absolute left-1 bottom-1 text-[8.5px] bg-neutral-950/70 text-neutral-400 px-1.5 py-0.5 rounded font-sans font-bold uppercase">
+                      Foto {idx + 1}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

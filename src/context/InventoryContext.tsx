@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Vehicle, ConsignmentRequest, ActiveTab } from '../types';
 import { INITIAL_VEHICLES } from '../mockData';
-import { supabase } from '../supabase';
+import { useAuth } from './AuthContext';
 
 interface InventoryContextProps {
   vehicles: Vehicle[];
@@ -11,6 +11,7 @@ interface InventoryContextProps {
   consignments: ConsignmentRequest[];
   addConsignment: (req: Omit<ConsignmentRequest, 'id' | 'creadoEn' | 'estado'>) => void;
   updateConsignmentStatus: (id: string, status: ConsignmentRequest['estado']) => void;
+  updateConsignmentNotes: (id: string, notes: string) => Promise<void>;
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   adminViewMode: boolean;
@@ -35,21 +36,30 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [bodyTypeFilter, setBodyTypeFilter] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const { token } = useAuth();
 
   useEffect(() => {
     fetchVehicles();
-    fetchConsignments();
   }, []);
+
+  useEffect(() => {
+    if (token) {
+      fetchConsignments();
+    } else {
+      setConsignments([]);
+    }
+  }, [token]);
 
   const fetchVehicles = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('vehicles')
-      .select('*')
-      .order('creadoEn', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching vehicles from Supabase:', error.message);
+    try {
+      const response = await fetch('/api/vehicles');
+      if (!response.ok) throw new Error('Error al obtener vehículos del servidor.');
+      const data = await response.json();
+      setVehicles(data || []);
+      localStorage.setItem('damico_vehicles', JSON.stringify(data || []));
+    } catch (error) {
+      console.error('Error fetching vehicles from Express:', error);
       const cached = localStorage.getItem('damico_vehicles');
       if (cached) {
         try {
@@ -61,21 +71,24 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setVehicles(INITIAL_VEHICLES);
         localStorage.setItem('damico_vehicles', JSON.stringify(INITIAL_VEHICLES));
       }
-    } else {
-      setVehicles(data || []);
-      localStorage.setItem('damico_vehicles', JSON.stringify(data || []));
     }
     setLoading(false);
   };
 
   const fetchConsignments = async () => {
-    const { data, error } = await supabase
-      .from('consignments')
-      .select('*')
-      .order('creadoEn', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching consignments from Supabase:', error.message);
+    if (!token) return;
+    try {
+      const response = await fetch('/api/consignments', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error('Error al obtener propuestas del servidor.');
+      const data = await response.json();
+      setConsignments(data || []);
+      localStorage.setItem('damico_consignments', JSON.stringify(data || []));
+    } catch (error) {
+      console.error('Error fetching consignments from Express:', error);
       const cached = localStorage.getItem('damico_consignments');
       if (cached) {
         try {
@@ -83,118 +96,143 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         } catch {
           setConsignments([]);
         }
-      } else {
-        setConsignments([]);
       }
-    } else {
-      setConsignments(data || []);
-      localStorage.setItem('damico_consignments', JSON.stringify(data || []));
     }
   };
 
   const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'creadoEn'>) => {
-    const newVehicle = {
-      ...vehicleData,
-      creadoEn: new Date().toISOString()
-    };
-    const { data, error } = await supabase
-      .from('vehicles')
-      .insert(newVehicle)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error adding vehicle to Supabase:', error.message);
-      const localVehicle: Vehicle = {
-        ...newVehicle,
-        id: `${vehicleData.marca.toLowerCase()}-${vehicleData.modelo.toLowerCase()}-${Date.now()}`
-      };
-      setVehicles(prev => [localVehicle, ...prev]);
-      localStorage.setItem('damico_vehicles', JSON.stringify([localVehicle, ...vehicles]));
-    } else if (data) {
-      setVehicles(prev => [data as Vehicle, ...prev]);
-      localStorage.setItem('damico_vehicles', JSON.stringify([data as Vehicle, ...vehicles]));
+    try {
+      const response = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(vehicleData)
+      });
+      if (!response.ok) throw new Error('Error al agregar vehículo.');
+      const data = await response.json();
+      setVehicles(prev => [data, ...prev]);
+      // Sincronizar cache
+      const cached = localStorage.getItem('damico_vehicles');
+      const list = cached ? JSON.parse(cached) : [];
+      localStorage.setItem('damico_vehicles', JSON.stringify([data, ...list]));
+    } catch (error) {
+      console.error('Error adding vehicle via API:', error);
+      alert('Ocurrió un error al guardar la unidad en el servidor.');
     }
   };
 
   const updateVehicle = async (id: string, updated: Partial<Vehicle>) => {
-    const { error } = await supabase
-      .from('vehicles')
-      .update(updated)
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error updating vehicle in Supabase:', error.message);
+    try {
+      const response = await fetch(`/api/vehicles/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updated)
+      });
+      if (!response.ok) throw new Error('Error al actualizar vehículo.');
+      const data = await response.json();
+      const updatedVehicles = vehicles.map(v => (v.id === id ? data : v));
+      setVehicles(updatedVehicles);
+      localStorage.setItem('damico_vehicles', JSON.stringify(updatedVehicles));
+    } catch (error) {
+      console.error('Error updating vehicle via API:', error);
+      alert('Ocurrió un error al modificar la unidad en el servidor.');
     }
-
-    const updatedVehicles = vehicles.map(v => (v.id === id ? { ...v, ...updated } : v));
-    setVehicles(updatedVehicles);
-    localStorage.setItem('damico_vehicles', JSON.stringify(updatedVehicles));
   };
 
   const deleteVehicle = async (id: string) => {
-    const { error } = await supabase
-      .from('vehicles')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting vehicle from Supabase:', error.message);
-    }
-
-    const filtered = vehicles.filter(v => v.id !== id);
-    setVehicles(filtered);
-    localStorage.setItem('damico_vehicles', JSON.stringify(filtered));
-    if (selectedVehicleId === id) {
-      setSelectedVehicleId(null);
+    try {
+      const response = await fetch(`/api/vehicles/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error('Error al eliminar vehículo.');
+      const filtered = vehicles.filter(v => v.id !== id);
+      setVehicles(filtered);
+      localStorage.setItem('damico_vehicles', JSON.stringify(filtered));
+      if (selectedVehicleId === id) {
+        setSelectedVehicleId(null);
+      }
+    } catch (error) {
+      console.error('Error deleting vehicle via API:', error);
+      alert('Ocurrió un error al borrar la unidad del servidor.');
     }
   };
 
   const addConsignment = async (reqData: Omit<ConsignmentRequest, 'id' | 'creadoEn' | 'estado'>) => {
-    const newReq = {
-      ...reqData,
-      estado: 'Pendiente' as const,
-      creadoEn: new Date().toISOString()
-    };
-    const { data, error } = await supabase
-      .from('consignments')
-      .insert(newReq)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error adding consignment to Supabase:', error.message);
-      const localReq: ConsignmentRequest = {
-        ...newReq,
-        id: `consign-${Date.now()}`
-      };
-      setConsignments(prev => [localReq, ...prev]);
-      localStorage.setItem('damico_consignments', JSON.stringify([localReq, ...consignments]));
-    } else if (data) {
-      setConsignments(prev => [data as ConsignmentRequest, ...prev]);
-      localStorage.setItem('damico_consignments', JSON.stringify([data as ConsignmentRequest, ...consignments]));
+    try {
+      const response = await fetch('/api/consignments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reqData)
+      });
+      if (!response.ok) throw new Error('Error al crear propuesta.');
+      const data = await response.json();
+      setConsignments(prev => [data, ...prev]);
+      
+      const cached = localStorage.getItem('damico_consignments');
+      const list = cached ? JSON.parse(cached) : [];
+      localStorage.setItem('damico_consignments', JSON.stringify([data, ...list]));
+    } catch (error) {
+      console.error('Error sending consignment:', error);
+      alert('Ocurrió un error al enviar tu propuesta de consignación. Por favor reintentá.');
     }
   };
 
   const updateConsignmentStatus = async (id: string, status: ConsignmentRequest['estado']) => {
-    const { error } = await supabase
-      .from('consignments')
-      .update({ estado: status })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error updating consignment in Supabase:', error.message);
+    try {
+      const response = await fetch(`/api/consignments/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ estado: status })
+      });
+      if (!response.ok) throw new Error('Error al cambiar estado.');
+      const data = await response.json();
+      const updated = consignments.map(c => (c.id === id ? data : c));
+      setConsignments(updated);
+      localStorage.setItem('damico_consignments', JSON.stringify(updated));
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Error al actualizar el estado de la propuesta.');
     }
-
-    const updated = consignments.map(c => (c.id === id ? { ...c, estado: status } : c));
-    setConsignments(updated);
-    localStorage.setItem('damico_consignments', JSON.stringify(updated));
   };
 
-  const setActiveTab = (tab: ActiveTab) => {
+  const updateConsignmentNotes = async (id: string, notes: string) => {
+    try {
+      const response = await fetch(`/api/consignments/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ notasInternas: notes })
+      });
+      if (!response.ok) throw new Error('Error al guardar notas.');
+      const data = await response.json();
+      const updated = consignments.map(c => (c.id === id ? data : c));
+      setConsignments(updated);
+      localStorage.setItem('damico_consignments', JSON.stringify(updated));
+    } catch (error) {
+      console.error('Error updating notes:', error);
+      alert('Error al guardar las notas en el servidor.');
+    }
+  };
+
+  const setActiveTab = useCallback((tab: ActiveTab) => {
     setActiveTabInternal(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
   return (
     <InventoryContext.Provider
@@ -206,6 +244,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         consignments,
         addConsignment,
         updateConsignmentStatus,
+        updateConsignmentNotes,
         activeTab,
         setActiveTab,
         adminViewMode,

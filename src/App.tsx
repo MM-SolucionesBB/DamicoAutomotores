@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { InventoryProvider, useInventory } from './context/InventoryContext';
 import { Navigation } from './components/Navigation';
 import { HomeView } from './components/HomeView';
@@ -12,10 +12,27 @@ import { CatalogView } from './components/CatalogView';
 import { ConsignmentView } from './components/ConsignmentView';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginPage } from './components/LoginPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { Car, MapPin, Calendar, Clock, Sparkles } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
-  const { activeTab, adminViewMode } = useInventory();
+  const { activeTab, adminViewMode, setActiveTab } = useInventory();
+  const { token } = useAuth();
+
+  React.useEffect(() => {
+    const checkAdminUrl = () => {
+      if (window.location.hash === '#control-panel' || window.location.search.includes('control-panel=true')) {
+        if (token) {
+          setActiveTab('admin');
+        } else {
+          setActiveTab('login');
+        }
+      }
+    };
+    checkAdminUrl();
+    window.addEventListener('hashchange', checkAdminUrl);
+    return () => window.removeEventListener('hashchange', checkAdminUrl);
+  }, [setActiveTab, token]);
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-dark text-white selection:bg-brand-primary selection:text-white font-sans">
@@ -29,7 +46,11 @@ const MainAppContent: React.FC = () => {
         {activeTab === 'catalog' && <CatalogView />}
         {activeTab === 'consignment' && <ConsignmentView />}
         {activeTab === 'login' && <LoginPage />}
-        {activeTab === 'admin' && <AdminDashboard />}
+        {activeTab === 'admin' && (
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        )}
       </main>
 
       {/* Luxury Footer (Only visible on Client Public views, hidden on administrative board for cleaner density) */}

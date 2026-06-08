@@ -18,9 +18,13 @@ export const AdminDashboard: React.FC = () => {
     updateVehicle, 
     consignments, 
     updateConsignmentStatus,
+    updateConsignmentNotes,
     setAdminViewMode,
     setActiveTab 
   } = useInventory();
+
+  // State to hold typing internal notes
+  const [notesState, setNotesState] = useState<Record<string, string>>({});
 
   // Selected vehicle for edit (null means creating, undefined means not showing form)
   const [formMode, setFormMode] = useState<'create' | 'edit' | undefined>(undefined);
@@ -362,80 +366,104 @@ export const AdminDashboard: React.FC = () => {
               consignments.map(c => (
                 <div 
                   key={c.id}
-                  className="bg-brand-card/60 border border-neutral-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6"
+                  className="bg-brand-card/60 border border-neutral-800 rounded-2xl p-6 flex flex-col gap-6"
                   id={`prop-req-${c.id}`}
                 >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-sans font-bold uppercase tracking-wider py-1 px-2.5 rounded-full ${
-                        c.estado === 'Pendiente'
-                          ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
-                          : c.estado === 'Aceptado'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : c.estado === 'Revisado'
-                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      }`}>
-                        Propuesta {c.estado}
-                      </span>
-                      <span className="font-sans text-xs text-neutral-500 font-bold">
-                        {new Date(c.creadoEn).toLocaleDateString()}
-                      </span>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-sans font-bold uppercase tracking-wider py-1 px-2.5 rounded-full ${
+                          c.estado === 'Pendiente'
+                            ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
+                            : c.estado === 'Aceptado'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : c.estado === 'Revisado'
+                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        }`}>
+                          Propuesta {c.estado}
+                        </span>
+                        <span className="font-sans text-xs text-neutral-500 font-bold">
+                          {new Date(c.creadoEn).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      <h3 className="font-display text-2xl text-white uppercase tracking-wider">
+                        {c.marca} {c.modelo} {c.version || ''} <span className="text-neutral-500 text-base">({c.anio})</span>
+                      </h3>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 text-xs font-sans text-neutral-400 uppercase">
+                        <div>
+                          <span className="text-neutral-500 block leading-none mb-1 font-bold">Precio sugerido</span>
+                          <strong className="text-emerald-400 font-display text-base">USD {c.precioPretendido.toLocaleString('de-DE')}</strong>
+                        </div>
+                        <div>
+                          <span className="text-neutral-500 block leading-none mb-1 font-bold">Kilometraje</span>
+                          <strong className="text-white text-base font-display">{c.kilometraje.toLocaleString('de-DE')} KM</strong>
+                        </div>
+                        <div>
+                          <span className="text-neutral-500 block leading-none mb-1 font-bold">Cliente</span>
+                          <strong className="text-white text-xs">{c.nombre}</strong>
+                        </div>
+                        <div>
+                          <span className="text-neutral-500 block leading-none mb-1 font-bold">WhatsApp</span>
+                          <strong className="text-white text-xs">{c.celular}</strong>
+                        </div>
+                      </div>
                     </div>
 
-                    <h3 className="font-display text-2xl text-white uppercase tracking-wider">
-                      {c.marca} {c.modelo} {c.version || ''} <span className="text-neutral-500 text-base">({c.anio})</span>
-                    </h3>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 text-xs font-sans text-neutral-400 uppercase">
-                      <div>
-                        <span className="text-neutral-500 block leading-none mb-1 font-bold">Precio sugerido</span>
-                        <strong className="text-emerald-400 font-display text-base">USD {c.precioPretendido.toLocaleString('de-DE')}</strong>
-                      </div>
-                      <div>
-                        <span className="text-neutral-500 block leading-none mb-1 font-bold">Kilometraje</span>
-                        <strong className="text-white text-base font-display">{c.kilometraje.toLocaleString('de-DE')} KM</strong>
-                      </div>
-                      <div>
-                        <span className="text-neutral-500 block leading-none mb-1 font-bold">Cliente</span>
-                        <strong className="text-white text-xs">{c.nombre}</strong>
-                      </div>
-                      <div>
-                        <span className="text-neutral-500 block leading-none mb-1 font-bold">WhatsApp</span>
-                        <strong className="text-white text-xs">{c.celular}</strong>
-                      </div>
+                    {/* Actions buttons */}
+                    <div className="flex items-center gap-2 border-t md:border-t-0 border-neutral-900 pt-4 md:pt-0">
+                      <button
+                        onClick={() => handleTriggerMessage(c)}
+                        className="bg-[#161616] hover:bg-neutral-900 border border-neutral-800 text-white font-sans text-xs uppercase font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                        id={`prop-wa-btn-${c.id}`}
+                      >
+                        <Send className="h-3.5 w-3.5 text-emerald-400" />
+                        Contactar
+                      </button>
+                      
+                      {c.estado === 'Pendiente' && (
+                        <>
+                          <button
+                            onClick={() => updateConsignmentStatus(c.id, 'Aceptado')}
+                            className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-neutral-950 border border-emerald-500/20 py-2.5 px-4 rounded-xl text-center font-sans text-xs uppercase font-bold transition-all cursor-pointer"
+                            id={`prop-accept-${c.id}`}
+                          >
+                            Aceptar
+                          </button>
+                          <button
+                            onClick={() => updateConsignmentStatus(c.id, 'Rechazado')}
+                            className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 py-2.5 px-3 rounded-xl transition-all font-sans text-xs uppercase font-bold cursor-pointer"
+                            id={`prop-reject-${c.id}`}
+                          >
+                            Rechazar
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {/* Actions buttons */}
-                  <div className="flex items-center gap-2 border-t md:border-t-0 border-neutral-900 pt-4 md:pt-0">
+                  {/* Notes Area CRM */}
+                  <div className="mt-2 pt-4 border-t border-neutral-900/60 w-full flex flex-col sm:flex-row gap-3 items-end">
+                    <div className="flex-grow">
+                      <label className="font-sans text-[10px] text-neutral-500 uppercase tracking-wider block mb-1.5 font-bold">Notas de Seguimiento Interno</label>
+                      <textarea
+                        placeholder="Escribí notas de seguimiento aquí... (ej: Cliente acepta peritaje, acordamos para el sábado)"
+                        value={notesState[c.id] !== undefined ? notesState[c.id] : (c.notasInternas || '')}
+                        onChange={(e) => setNotesState(prev => ({ ...prev, [c.id]: e.target.value }))}
+                        className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-xl p-3 focus:outline-none placeholder-neutral-600 text-white font-sans text-xs h-16 resize-none"
+                      />
+                    </div>
                     <button
-                      onClick={() => handleTriggerMessage(c)}
-                      className="bg-[#161616] hover:bg-neutral-900 border border-neutral-800 text-white font-sans text-xs uppercase font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
-                      id={`prop-wa-btn-${c.id}`}
+                      onClick={() => {
+                        updateConsignmentNotes(c.id, notesState[c.id] !== undefined ? notesState[c.id] : (c.notasInternas || ''));
+                        alert('Nota guardada con éxito.');
+                      }}
+                      className="w-full sm:w-auto bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 hover:text-white px-5 py-3.5 rounded-xl text-xs uppercase font-bold shrink-0 transition-colors cursor-pointer h-[46px]"
                     >
-                      <Send className="h-3.5 w-3.5 text-emerald-400" />
-                      Contactar
+                      Guardar Nota
                     </button>
-                    
-                    {c.estado === 'Pendiente' && (
-                      <>
-                        <button
-                          onClick={() => updateConsignmentStatus(c.id, 'Aceptado')}
-                          className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-neutral-950 border border-emerald-500/20 py-2.5 px-4 rounded-xl text-center font-sans text-xs uppercase font-bold transition-all cursor-pointer"
-                          id={`prop-accept-${c.id}`}
-                        >
-                          Aceptar
-                        </button>
-                        <button
-                          onClick={() => updateConsignmentStatus(c.id, 'Rechazado')}
-                          className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 py-2.5 px-3 rounded-xl transition-all font-sans text-xs uppercase font-bold cursor-pointer"
-                          id={`prop-reject-${c.id}`}
-                        >
-                          Rechazar
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
               ))

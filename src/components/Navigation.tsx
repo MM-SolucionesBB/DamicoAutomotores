@@ -19,20 +19,10 @@ export const Navigation: React.FC = () => {
         {/* Logo Section */}
         <div 
           onClick={() => { setActiveTab('home'); setAdminViewMode(false); }}
-          className="group flex cursor-pointer items-center space-x-3 transition-colors"
+          className="cursor-pointer transition-transform hover:scale-[1.02] py-2"
           id="nav-logo-btn"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-primary shadow-md shadow-brand-primary/20 transition-transform group-hover:scale-105">
-            <Car className="h-6 w-6 text-white font-bold" />
-          </div>
-          <div>
-            <div className="font-display text-2xl uppercase tracking-wider text-white leading-none">
-              D'Amico
-            </div>
-            <div className="font-sans text-xs uppercase tracking-[0.2em] text-brand-primary font-bold">
-              Automotores
-            </div>
-          </div>
+          <img src="/logo.png" alt="D'Amico Automotores" className="h-10 sm:h-12 w-auto object-contain" />
         </div>
 
         {/* Navigation Tabs - Client Mode */}
@@ -83,44 +73,24 @@ export const Navigation: React.FC = () => {
 
         {/* Role Switcher & Action BTN */}
         <div className="flex items-center space-x-4">
-          <button
-            onClick={() => {
-              if (!adminViewMode && !user) {
-                setActiveTab('login');
-                return;
-              }
-              const nextMode = !adminViewMode;
-              setAdminViewMode(nextMode);
-              if (nextMode) {
-                setActiveTab('admin');
-              } else {
+          {adminViewMode && (
+            <button
+              onClick={() => {
+                setAdminViewMode(false);
                 setActiveTab('home');
-              }
-            }}
-            className={`flex items-center space-x-2 rounded-lg py-2 px-4 font-sans text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-              adminViewMode
-                ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20 hover:bg-brand-primary/20 shadow-sm shadow-brand-primary/5'
-                : 'bg-neutral-900 text-neutral-300 hover:text-white border border-neutral-800 hover:bg-neutral-800'
-            }`}
-            id="role-toggle-btn"
-          >
-            {adminViewMode ? (
-              <>
-                <Eye className="h-3.5 w-3.5" />
-                <span>Vista Cliente</span>
-              </>
-            ) : (
-              <>
-                <Settings className="h-3.5 w-3.5" />
-                <span>Modo Admin</span>
-              </>
-            )}
-          </button>
+              }}
+              className="flex items-center space-x-2 rounded-lg py-2 px-4 font-sans text-xs font-semibold uppercase tracking-wider transition-all duration-300 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 hover:bg-brand-primary/20 shadow-sm shadow-brand-primary/5 cursor-pointer"
+              id="role-toggle-btn"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>Vista Cliente</span>
+            </button>
+          )}
 
           {!adminViewMode && (
             <button
               onClick={() => setActiveTab('catalog')}
-              className="hidden lg:flex items-center justify-center rounded-lg bg-brand-primary py-2.5 px-5 font-display text-sm tracking-wide uppercase text-white transition-all duration-300 hover:bg-brand-primary/95 hover:scale-[1.02] hover:shadow-lg hover:shadow-brand-primary/20"
+              className="hidden lg:flex items-center justify-center rounded-lg bg-brand-primary py-2.5 px-5 font-display text-sm tracking-wide uppercase text-white transition-all duration-300 hover:bg-brand-primary/95 hover:scale-[1.02] hover:shadow-lg hover:shadow-brand-primary/20 cursor-pointer"
               id="nav-catalog-cta-btn"
             >
               Ver Inventario

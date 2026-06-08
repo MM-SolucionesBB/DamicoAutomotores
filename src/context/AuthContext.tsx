@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../supabase';
-import type { Session, User } from '@supabase/supabase-js';
+
+export interface User {
+  email: string;
+  id: string;
+}
 
 interface AuthContextProps {
   user: User | null;
-  session: Session | null;
+  token: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -14,35 +17,61 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const storedToken = localStorage.getItem('damico_auth_token');
+    const storedUser = localStorage.getItem('damico_auth_user');
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    if (storedToken && storedUser) {
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem('damico_auth_token');
+        localStorage.removeItem('damico_auth_user');
+      }
+    }
+    setLoading(false);
   }, []);
 
   const signIn = async (email: string, password: string): Promise<string | null> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error?.message ?? null;
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return data.error || 'Credenciales inválidas.';
+      }
+
+      setToken(data.token);
+      setUser(data.user);
+      localStorage.setItem('damico_auth_token', data.token);
+      localStorage.setItem('damico_auth_user', JSON.stringify(data.user));
+      return null;
+    } catch (err) {
+      console.error('Login error:', err);
+      return 'Error de conexión con el servidor.';
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('damico_auth_token');
+    localStorage.removeItem('damico_auth_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, token, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

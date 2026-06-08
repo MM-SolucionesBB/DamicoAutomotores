@@ -15,6 +15,7 @@ export interface Vehicle {
   transmision: 'Manual' | 'Automática';
   traccion: '4x2' | '4x4' | 'AWD' | 'RWD';
   combustible: 'Nafta' | 'Diesel' | 'Nafta/GNC' | 'Híbrido' | 'Eléctrico';
+  carroceria: 'SUV' | 'Pick-up' | 'Sedán' | 'Hatchback' | 'Deportivos';
   imagen: string;
   imagenesSecundarias: string[];
   destacado: boolean;
@@ -33,6 +34,7 @@ export interface ConsignmentRequest {
   kilometraje: number;
   precioPretendido: number;
   estado: 'Pendiente' | 'Revisado' | 'Aceptado' | 'Rechazado';
+  notasInternas?: string;
   creadoEn: string;
 }
 
