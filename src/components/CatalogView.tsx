@@ -649,7 +649,7 @@ export const CatalogView: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12">
               <div className="lg:col-span-7 bg-brand-dark relative aspect-video lg:aspect-auto lg:h-[420px]">
                 <img 
-                  src={targetUnit.imagenesSecundarias[activeMediaIndex] || targetUnit.imagen} 
+                  src={[targetUnit.imagen, ...targetUnit.imagenesSecundarias][activeMediaIndex] || targetUnit.imagen} 
                   alt={`${targetUnit.marca} ${targetUnit.modelo}`}
                   referrerPolicy="no-referrer"
                   className="h-full w-full object-cover transition-all"
