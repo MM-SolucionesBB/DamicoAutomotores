@@ -5,8 +5,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { INITIAL_VEHICLES } from './src/mockData';
-import { Vehicle, ConsignmentRequest } from './src/types';
+import { INITIAL_VEHICLES } from './src/mockData.js';
+import { Vehicle, ConsignmentRequest } from './src/types.js';
 
 dotenv.config();
 
