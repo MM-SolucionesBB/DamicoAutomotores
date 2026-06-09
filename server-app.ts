@@ -50,19 +50,24 @@ interface DatabaseSchema {
 
 // Local Database Helpers
 function readLocalDatabase(): DatabaseSchema {
+  const defaultDb: DatabaseSchema = {
+    users: [],
+    vehicles: INITIAL_VEHICLES,
+    consignments: []
+  };
+
   if (!fs.existsSync(DB_FILE)) {
-    const defaultDb: DatabaseSchema = {
-      users: [],
-      vehicles: INITIAL_VEHICLES,
-      consignments: []
-    };
-    const salt = bcrypt.genSaltSync(10);
-    const passwordHash = bcrypt.hashSync('adminPassword123', salt);
-    defaultDb.users.push({
-      email: 'admin@damicoautomotores.com',
-      passwordHash
-    });
-    fs.writeFileSync(DB_FILE, JSON.stringify(defaultDb, null, 2), 'utf8');
+    try {
+      const salt = bcrypt.genSaltSync(10);
+      const passwordHash = bcrypt.hashSync('adminPassword123', salt);
+      defaultDb.users.push({
+        email: 'admin@damicoautomotores.com',
+        passwordHash
+      });
+      fs.writeFileSync(DB_FILE, JSON.stringify(defaultDb, null, 2), 'utf8');
+    } catch (e) {
+      console.warn('[Damico Backend] Read-only environment: Default database.json could not be written. Using in-memory fallback.');
+    }
     return defaultDb;
   }
   
@@ -70,17 +75,16 @@ function readLocalDatabase(): DatabaseSchema {
     const raw = fs.readFileSync(DB_FILE, 'utf8');
     return JSON.parse(raw);
   } catch (error) {
-    const defaultDb: DatabaseSchema = {
-      users: [],
-      vehicles: INITIAL_VEHICLES,
-      consignments: []
-    };
     return defaultDb;
   }
 }
 
 function writeLocalDatabase(db: DatabaseSchema) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf8');
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf8');
+  } catch (error) {
+    console.warn('[Damico Backend] Read-only environment: Could not write database.json updates.', error);
+  }
 }
 
 // Ensure local db file is initialized on startup if not on Supabase
