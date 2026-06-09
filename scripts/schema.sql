@@ -33,15 +33,13 @@ CREATE TABLE IF NOT EXISTS vehicles (
 CREATE TABLE IF NOT EXISTS consignments (
   id text PRIMARY KEY,
   nombre text NOT NULL,
-  apellido text NOT NULL,
-  telefono text NOT NULL,
-  email text NOT NULL,
+  celular text NOT NULL,
   marca text NOT NULL,
   modelo text NOT NULL,
-  version text NOT NULL,
+  version text,
   anio integer NOT NULL,
   kilometraje integer NOT NULL,
-  detalles text,
+  "precioPretendido" numeric NOT NULL,
   estado text NOT NULL DEFAULT 'Pendiente',
   "notasInternas" text,
   "creadoEn" timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL

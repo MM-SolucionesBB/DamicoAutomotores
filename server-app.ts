@@ -11,20 +11,32 @@ import { Vehicle, ConsignmentRequest } from './src/types';
 dotenv.config();
 
 const app = express();
-const JWT_SECRET = process.env.JWT_SECRET || 'damico-secret-key-super-secure';
+const JWT_SECRET = (process.env.JWT_SECRET || 'damico-secret-key-super-secure').replace(/['"]/g, '').trim();
 const DB_FILE = path.join(process.cwd(), 'database.json');
 
 // Supabase Connection Configuration
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const rawSupabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const rawSupabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const useSupabase = !!(supabaseUrl && supabaseServiceKey);
-const supabase = useSupabase ? createClient(supabaseUrl!, supabaseServiceKey!) : null;
+// Clean quotes and trim spaces from environment variables
+const supabaseUrl = rawSupabaseUrl ? rawSupabaseUrl.replace(/['"]/g, '').trim() : undefined;
+const supabaseServiceKey = rawSupabaseKey ? rawSupabaseKey.replace(/['"]/g, '').trim() : undefined;
+
+let useSupabase = !!(supabaseUrl && supabaseServiceKey);
+let supabase: any = null;
 
 if (useSupabase) {
-  console.log('[Damico Backend] Active DB mode: Supabase Cloud Database');
-} else {
-  console.log('[Damico Backend] Active DB mode: Local database.json File');
+  try {
+    supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    console.log('[Damico Backend] Active DB mode: Supabase Cloud Database');
+  } catch (error) {
+    console.error('[Damico Backend] Failed to initialize Supabase client:', error);
+    useSupabase = false;
+  }
+}
+
+if (!useSupabase) {
+  console.log('[Damico Backend] Active DB mode: Local database.json File (or in-memory fallback)');
 }
 
 app.use(express.json({ limit: '50mb' }));
@@ -122,8 +134,8 @@ app.post('/api/login', async (req, res) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   // Check Admin Env Override first (Simplifies serverless admin configuration on Vercel)
-  const envAdminEmail = process.env.ADMIN_EMAIL || 'admin@damicoautomotores.com';
-  const envAdminPassword = process.env.ADMIN_PASSWORD;
+  const envAdminEmail = (process.env.ADMIN_EMAIL || 'admin@damicoautomotores.com').replace(/['"]/g, '').trim();
+  const envAdminPassword = process.env.ADMIN_PASSWORD ? process.env.ADMIN_PASSWORD.replace(/['"]/g, '').trim() : undefined;
 
   if (normalizedEmail === envAdminEmail.toLowerCase().trim() && envAdminPassword) {
     if (password === envAdminPassword) {
