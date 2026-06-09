@@ -87,6 +87,20 @@ export const Navigation: React.FC = () => {
             </button>
           )}
 
+          {!adminViewMode && user && (
+            <button
+              onClick={() => {
+                setAdminViewMode(true);
+                setActiveTab('admin');
+              }}
+              className="flex items-center space-x-2 rounded-lg py-2 px-4 font-sans text-xs font-semibold uppercase tracking-wider transition-all duration-300 bg-brand-primary text-white hover:bg-brand-primary/90 shadow-sm shadow-brand-primary/5 cursor-pointer"
+              id="return-to-admin-btn"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              <span>Volver al Panel</span>
+            </button>
+          )}
+
           {!adminViewMode && (
             <button
               onClick={() => setActiveTab('catalog')}
