@@ -3,6 +3,10 @@
     {
       "email": "admin@damicoautomotores.com",
       "passwordHash": "$2b$10$n.nJG8uBNScJSVTCvO0wkes2fM74oEpfqwgtLL7PEP8cantShBUIi"
+    },
+    {
+      "email": "fededamico@admin.com",
+      "passwordHash": "$2b$10$.x67FATv6r3qVvhIYRLLEeBOZ/11BwJzmam0VF//Nr.FpdTaWBcr6"
     }
   ],
   "vehicles": [
@@ -115,7 +119,7 @@
         "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&q=80&w=600"
       ],
       "destacado": true,
-      "estado": "Disponible",
+      "estado": "Vendido",
       "creadoEn": "2026-05-22T16:45:00Z"
     },
     {
