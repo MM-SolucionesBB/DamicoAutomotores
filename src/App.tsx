@@ -9,30 +9,36 @@ import { InventoryProvider, useInventory } from './context/InventoryContext';
 import { Navigation } from './components/Navigation';
 import { HomeView } from './components/HomeView';
 import { CatalogView } from './components/CatalogView';
+import { VehicleDetailView } from './components/VehicleDetailView';
 import { ConsignmentView } from './components/ConsignmentView';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginPage } from './components/LoginPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { Car, MapPin, Calendar, Clock, Sparkles } from 'lucide-react';
+import { Car, Sparkles, SendHorizontal } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
-  const { activeTab, adminViewMode, setActiveTab } = useInventory();
+  const { activeTab, adminViewMode, setActiveTab, setSelectedVehicleId } = useInventory();
   const { token } = useAuth();
 
   React.useEffect(() => {
     const checkAdminUrl = () => {
-      if (window.location.hash === '#control-panel' || window.location.search.includes('control-panel=true')) {
+      const hash = window.location.hash;
+      if (hash === '#control-panel' || window.location.search.includes('control-panel=true')) {
         if (token) {
           setActiveTab('admin');
         } else {
           setActiveTab('login');
         }
+      } else if (hash.startsWith('#vehicle=')) {
+        const vehicleId = hash.replace('#vehicle=', '');
+        setSelectedVehicleId(vehicleId);
+        setActiveTab('vehicle-detail');
       }
     };
     checkAdminUrl();
     window.addEventListener('hashchange', checkAdminUrl);
     return () => window.removeEventListener('hashchange', checkAdminUrl);
-  }, [setActiveTab, token]);
+  }, [setActiveTab, setSelectedVehicleId, token]);
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-dark text-white selection:bg-brand-primary selection:text-white font-sans">
@@ -44,6 +50,7 @@ const MainAppContent: React.FC = () => {
       <main className="flex-grow">
         {activeTab === 'home' && <HomeView />}
         {activeTab === 'catalog' && <CatalogView />}
+        {activeTab === 'vehicle-detail' && <VehicleDetailView />}
         {activeTab === 'consignment' && <ConsignmentView />}
         {activeTab === 'login' && <LoginPage />}
         {activeTab === 'admin' && (
@@ -53,13 +60,30 @@ const MainAppContent: React.FC = () => {
         )}
       </main>
 
+      {/* CTA Banner */}
+      {!adminViewMode && activeTab !== 'login' && activeTab !== 'admin' && (
+        <section className="py-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+            <a
+              href="https://wa.me/5492915367498?text=Hola%20Federico%2C%20me%20comunico%20desde%20la%20p%C3%A1gina%20web%20de%20D%27Amico%20Automotores."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-brand-primary hover:bg-brand-primary/90 text-white font-display text-base uppercase tracking-wider py-3.5 px-8 rounded-xl transition-all cursor-pointer shadow-lg shadow-brand-primary/20"
+            >
+              <SendHorizontal className="h-4 w-4" />
+              Contactanos por WhatsApp
+            </a>
+          </div>
+        </section>
+      )}
+
       {/* Luxury Footer (Only visible on Client Public views, hidden on administrative board for cleaner density) */}
       {!adminViewMode && (
         <footer className="bg-brand-dark border-t border-neutral-900 pt-16 pb-8" id="system-luxury-footer">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
 
             {/* Column 1: Brand Info */}
-            <div className="md:col-span-4 space-y-4">
+            <div className="md:col-span-6 space-y-4">
               <div className="flex items-center space-x-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-primary">
                   <Car className="h-5 w-5 text-white font-bold" />
@@ -73,27 +97,8 @@ const MainAppContent: React.FC = () => {
               </p>
             </div>
 
-            {/* Column 2: Quick Links */}
-            <div className="md:col-span-4 space-y-3">
-              <h4 className="font-display text-sm uppercase tracking-widest text-brand-primary">Oficina de Ventas</h4>
-              <ul className="space-y-2 text-xs text-neutral-400 font-sans">
-                <li className="flex items-start space-x-2">
-                  <MapPin className="h-4 w-4 text-brand-primary shrink-0 mt-0.5" />
-                  <span>Av. del Libertador 4200, Palermo, CABA, Argentina</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <Calendar className="h-4 w-4 text-brand-primary shrink-0 mt-0.5" />
-                  <span>Lunes a Viernes 9:00 a 19:30 hs</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <Clock className="h-4 w-4 text-brand-primary shrink-0 mt-0.5" />
-                  <span>Sábados de 9:00 a 13:00 hs</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3: Legal & Standards */}
-            <div className="md:col-span-4 space-y-3">
+            {/* Column 2: Legal & Standards */}
+            <div className="md:col-span-6 space-y-3">
               <h4 className="font-display text-sm uppercase tracking-widest text-white">Transparencia de Marca</h4>
               <p className="font-sans text-xs text-neutral-400 leading-relaxed">
                 Todas las transacciones de compra, venta o consignación digital de vehículos están sujetas a validación técnico-mecánica previa e información registral libre de deudas patente y multas nacionales.

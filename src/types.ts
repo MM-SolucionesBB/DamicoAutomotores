@@ -38,4 +38,4 @@ export interface ConsignmentRequest {
   creadoEn: string;
 }
 
-export type ActiveTab = 'home' | 'catalog' | 'consignment' | 'admin' | 'login';
+export type ActiveTab = 'home' | 'catalog' | 'consignment' | 'admin' | 'login' | 'vehicle-detail';

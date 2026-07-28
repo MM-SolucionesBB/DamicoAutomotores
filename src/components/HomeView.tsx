@@ -6,10 +6,10 @@
 import React, { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { BODY_TYPES } from '../mockData';
-import { Search, Compass, Coins, Star, Shield, HelpCircle, ChevronRight, ArrowUpRight, Calendar, Gauge, Fuel, Settings } from 'lucide-react';
+import { Search, Compass, Coins, Star, ChevronRight, ArrowUpRight, Calendar, Gauge, Fuel, Settings } from 'lucide-react';
 
 export const HomeView: React.FC = () => {
-  const { setActiveTab, setSearchFilter, setBodyTypeFilter, vehicles } = useInventory();
+  const { setActiveTab, setSearchFilter, setBodyTypeFilter, setSelectedVehicleId, vehicles } = useInventory();
   const [localSearch, setLocalSearch] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -44,10 +44,6 @@ export const HomeView: React.FC = () => {
             D'AMICO <span className="text-brand-primary">AUTOMOTORES</span>
           </h1>
           
-          <p className="mx-auto max-w-2xl font-sans text-sm sm:text-base text-neutral-400 font-medium tracking-wide mb-10 leading-relaxed uppercase">
-            Especialistas en Pick-ups, SUVs y unidades de alta gama seleccionadas bajo rigurosos estándares de calidad. Comprá, vendé o consigná tu vehículo con gestoría 100% transparente.
-          </p>
-
           {/* Quick Search Input Card */}
           <form 
             onSubmit={handleSearchSubmit} 
@@ -115,7 +111,7 @@ export const HomeView: React.FC = () => {
           {featured.map(v => (
             <div
               key={v.id}
-              onClick={() => { setSearchFilter(''); setBodyTypeFilter(''); setActiveTab('catalog'); }}
+              onClick={() => { setSelectedVehicleId(v.id); setActiveTab('vehicle-detail'); }}
               className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl border border-neutral-800/80 bg-brand-card/40 hover:border-neutral-700/80 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/40 transition-all duration-300"
               id={`featured-card-${v.id}`}
             >
@@ -189,8 +185,8 @@ export const HomeView: React.FC = () => {
           
           {/* Path A: Quiero Comprar */}
           <div 
-            onClick={() => { setSearchFilter(''); setBodyTypeFilter(''); setActiveTab('catalog'); }}
-            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-neutral-800 bg-brand-card/40 p-8 hover:bg-brand-card/70 transition-all duration-500 flex flex-col justify-between min-h-[350px] shadow-lg hover:shadow-2xl shadow-black hover:border-brand-primary/20"
+            onClick={() => window.open('https://wa.me/5492915367498?text=Hola%20Federico%2C%20me%20interesa%20comprar%20un%20veh%C3%ADculo%20en%20D%27Amico%20Automotores.', '_blank')}
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-neutral-800 bg-brand-card/40 p-6 hover:bg-brand-card/70 transition-all duration-500 flex flex-col justify-between min-h-[250px] shadow-lg hover:shadow-2xl shadow-black hover:border-brand-primary/20"
             id="pathway-buy-card"
           >
             <div className="absolute top-0 right-0 h-40 w-40 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-primary/10 via-transparent to-transparent opacity-80"></div>
@@ -203,25 +199,13 @@ export const HomeView: React.FC = () => {
                 Quiero Comprar
               </h2>
               <p className="font-sans text-sm text-neutral-400 font-medium leading-relaxed max-w-md">
-                Explorá nuestra flota exclusiva de vehículos minuciosamente revisados. Con documentación impecable de gestoría propia y listos para transferir de manera segura.
+                Explorá nuestro stock de vehículos seleccionados y encontrá la unidad ideal con el respaldo y la transparencia que caracterizan a D'Amico Automotores.
               </p>
-              
-              <ul className="mt-6 space-y-2 text-xs text-neutral-400 font-sans uppercase">
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 bg-brand-primary rounded-full"></span> Certificación D'Amico Premium
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 bg-brand-primary rounded-full"></span> Recibimos unidades en parte de pago
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 bg-brand-primary rounded-full"></span> Financiación prendaria exclusiva
-                </li>
-              </ul>
             </div>
 
             <div className="relative z-10 flex items-center justify-between mt-8 border-t border-neutral-800/60 pt-4">
               <span className="font-display text-sm uppercase tracking-widest text-[#F5A396] font-bold">
-                Ver Catálogo de Stock
+                Contactanos →
               </span>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800 group-hover:bg-brand-primary text-neutral-400 group-hover:text-white transition-all duration-300">
                 <ArrowUpRight className="h-4 w-4" />
@@ -232,7 +216,7 @@ export const HomeView: React.FC = () => {
           {/* Path B: Quiero Vender */}
           <div 
             onClick={() => setActiveTab('consignment')}
-            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-neutral-800 bg-brand-card/40 p-8 hover:bg-brand-card/70 transition-all duration-500 flex flex-col justify-between min-h-[350px] shadow-lg hover:shadow-2xl shadow-black hover:border-brand-primary/20"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-neutral-800 bg-brand-card/40 p-6 hover:bg-brand-card/70 transition-all duration-500 flex flex-col justify-between min-h-[250px] shadow-lg hover:shadow-2xl shadow-black hover:border-brand-primary/20"
             id="pathway-sell-card"
           >
             <div className="absolute top-0 right-0 h-40 w-40 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-primary/10 via-transparent to-transparent opacity-80"></div>
@@ -245,25 +229,13 @@ export const HomeView: React.FC = () => {
                 Quiero Vender / Consignar
               </h2>
               <p className="font-sans text-sm text-neutral-400 font-medium leading-relaxed max-w-md">
-                Vendé rápido de forma digital al valor real del mercado. Nosotros realizamos la producción visual HD, la publicación en portales, filtramos clientes y cerramos el cobro seguro.
+                Publicamos tu vehículo, gestionamos las consultas, coordinamos las visitas y te acompañamos hasta concretar una operación segura.
               </p>
-
-              <ul className="mt-6 space-y-2 text-xs text-neutral-400 font-sans uppercase">
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 bg-brand-primary rounded-full"></span> Producción Audiovisual de Alta Gama
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 bg-brand-primary rounded-full"></span> Publicación en portales líderes y redes
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 bg-brand-primary rounded-full"></span> Filtro de ofertas y cobro inmediato
-                </li>
-              </ul>
             </div>
 
             <div className="relative z-10 flex items-center justify-between mt-8 border-t border-neutral-800/60 pt-4">
               <span className="font-display text-sm uppercase tracking-widest text-[#F5A396] font-bold">
-                Cotizar mi Vehículo
+                Cotizar mi Vehículo →
               </span>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800 group-hover:bg-brand-primary text-neutral-400 group-hover:text-white transition-all duration-300">
                 <ArrowUpRight className="h-4 w-4" />
@@ -275,40 +247,6 @@ export const HomeView: React.FC = () => {
       </section>
 
       {/* Trust & Guarantee banner */}
-      <section className="bg-brand-card border-y border-neutral-950 py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-            <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary shrink-0">
-                <Star className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="font-display text-base tracking-wider text-white mb-1 uppercase">Calidad Certificada</h4>
-                <p className="font-sans text-xs text-neutral-400 leading-relaxed">Cada vehículo disponible es inspeccionado en más de 120 puntos críticos antes de salir al stock oficial.</p>
-              </div>
-            </div>
-            <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary shrink-0">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="font-display text-base tracking-wider text-white mb-1 uppercase">Operaciones Seguras</h4>
-                <p className="font-sans text-xs text-neutral-400 leading-relaxed">Aseguramos la trazabilidad absoluta de la transferencia monetaria y el estado registral legal.</p>
-              </div>
-            </div>
-            <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary shrink-0">
-                <HelpCircle className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="font-display text-base tracking-wider text-white mb-1 uppercase">Atención Inmediata</h4>
-                <p className="font-sans text-xs text-neutral-400 leading-relaxed">Respuestas instantáneas y personalizadas vía Whatsapp o visitas presenciales bajo cita privada.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
     </div>
   );
 };

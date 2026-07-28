@@ -48,7 +48,7 @@ export const Navigation: React.FC = () => {
               }`}
               id="tab-catalog-btn"
             >
-              Comprar Stock
+              Catálogo
             </button>
             <button
               onClick={() => setActiveTab('consignment')}
