@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { BODY_TYPES } from '../mockData';
-import { Search, Compass, Coins, Star, Shield, HelpCircle, ChevronRight, ArrowUpRight } from 'lucide-react';
+import { Search, Compass, Coins, Star, Shield, HelpCircle, ChevronRight, ArrowUpRight, Calendar, Gauge, Fuel, Settings } from 'lucide-react';
 
 export const HomeView: React.FC = () => {
   const { setActiveTab, setSearchFilter, setBodyTypeFilter, vehicles } = useInventory();
@@ -76,7 +76,6 @@ export const HomeView: React.FC = () => {
 
           {/* Slashed Quick Filters Buttons */}
           <div className="mt-8 flex flex-wrap justify-center items-center gap-3">
-            <span className="font-sans text-xs uppercase tracking-widest text-neutral-500 mr-2">Categorías Rápidas:</span>
             {BODY_TYPES.map(type => (
               <button
                 key={type.id}
@@ -89,6 +88,98 @@ export const HomeView: React.FC = () => {
             ))}
           </div>
 
+        </div>
+      </section>
+
+      {/* Featured Stock Highlights */}
+      <section className="mx-auto max-w-7xl w-full py-16 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <span className="font-sans text-xs text-brand-primary uppercase tracking-widest font-bold">SELECCIONADO EXCLUSIVO</span>
+            <h3 className="font-display text-3xl uppercase tracking-wider text-white mt-1">
+              Destacados de la Semana
+            </h3>
+          </div>
+          <button 
+            onClick={() => { setSearchFilter(''); setBodyTypeFilter(''); setActiveTab('catalog'); }}
+            className="flex items-center space-x-1 font-display text-sm uppercase tracking-wider text-neutral-400 hover:text-white transition-colors cursor-pointer"
+            id="see-all-featured-btn"
+          >
+            <span>Ver Todo el Stock</span>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Highlight Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {featured.map(v => (
+            <div
+              key={v.id}
+              onClick={() => { setSearchFilter(''); setBodyTypeFilter(''); setActiveTab('catalog'); }}
+              className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl border border-neutral-800/80 bg-brand-card/40 hover:border-neutral-700/80 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/40 transition-all duration-300"
+              id={`featured-card-${v.id}`}
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-brand-dark">
+                <img 
+                  src={v.imagen} 
+                  alt={`${v.marca} ${v.modelo}`}
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-cover transition-all duration-500 group-hover:scale-[1.03]"
+                />
+                {v.imagenesSecundarias?.[0] && (
+                  <img 
+                    src={v.imagenesSecundarias[0]} 
+                    alt={`${v.marca} ${v.modelo} vista secundaria`}
+                    referrerPolicy="no-referrer"
+                    className="absolute inset-0 h-full w-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  />
+                )}
+                <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-brand-primary text-white font-display text-sm font-bold tracking-wider uppercase py-1.5 px-3.5 rounded z-10 shadow-lg">
+                  <Star className="h-4 w-4 fill-current" />
+                  Destacado
+                </div>
+                <div className="absolute bottom-0 inset-x-0 h-[40%] bg-[linear-gradient(to_top,rgba(0,0,0,0.8)_0%,rgba(0,0,0,0.15)_25%,transparent_50%)]"></div>
+              </div>
+              <div className="p-5 flex flex-col justify-between flex-grow">
+                <div>
+                  <h4 className="font-display text-2xl font-bold text-white uppercase tracking-wide">
+                    {v.marca} {v.modelo}
+                  </h4>
+                  <p className="font-sans text-xs text-neutral-400 font-medium tracking-wide mt-1 uppercase">
+                    {v.version}
+                  </p>
+                </div>
+                
+                <div className="mt-4 pt-3 border-t border-neutral-800/60">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 mb-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-brand-primary/70 shrink-0" />
+                      <span className="font-sans text-xs text-neutral-300 uppercase tracking-wider">{v.anio}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Gauge className="h-4 w-4 text-brand-primary/70 shrink-0" />
+                      <span className="font-sans text-xs text-neutral-300 uppercase tracking-wider">
+                        {v.kilometraje === 0 ? '0 KM' : `${v.kilometraje.toLocaleString('de-DE')} KM`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Fuel className="h-4 w-4 text-brand-primary/70 shrink-0" />
+                      <span className="font-sans text-xs text-neutral-300 uppercase tracking-wider">{v.combustible}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-4 w-4 text-brand-primary/70 shrink-0" />
+                      <span className="font-sans text-xs text-neutral-300 uppercase tracking-wider">{v.transmision}</span>
+                    </div>
+                  </div>
+                  <div className="border-t border-neutral-800/60 pt-3">
+                    <div className="font-display text-[1.7rem] text-white">
+                      USD {v.precio.toLocaleString('de-DE')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -215,73 +306,6 @@ export const HomeView: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Featured Stock Highlights */}
-      <section className="mx-auto max-w-7xl w-full py-16 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <span className="font-sans text-xs text-brand-primary uppercase tracking-widest font-bold">SELECCIONADO EXCLUSIVO</span>
-            <h3 className="font-display text-3xl uppercase tracking-wider text-white mt-1">
-              Destacados de la Semana
-            </h3>
-          </div>
-          <button 
-            onClick={() => { setSearchFilter(''); setBodyTypeFilter(''); setActiveTab('catalog'); }}
-            className="flex items-center space-x-1 font-display text-sm uppercase tracking-wider text-neutral-400 hover:text-white transition-colors cursor-pointer"
-            id="see-all-featured-btn"
-          >
-            <span>Ver Todo el Stock</span>
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Highlight Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featured.map(v => (
-            <div
-              key={v.id}
-              onClick={() => { setSearchFilter(''); setBodyTypeFilter(''); setActiveTab('catalog'); }}
-              className="cursor-pointer group flex flex-col overflow-hidden rounded-xl border border-neutral-800 bg-brand-card/30 hover:border-neutral-700 transition-all duration-300"
-              id={`featured-card-${v.id}`}
-            >
-              <div className="relative aspect-video overflow-hidden bg-brand-dark">
-                <img 
-                  src={v.imagen} 
-                  alt={`${v.marca} ${v.modelo}`}
-                  referrerPolicy="no-referrer"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute top-3 left-3 bg-brand-primary text-white font-display text-xs tracking-wider uppercase py-1 px-2.5 rounded-md shadow-md z-10">
-                  Destacado
-                </div>
-                <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-brand-dark to-transparent"></div>
-              </div>
-              <div className="p-6 flex flex-col justify-between flex-grow">
-                <div>
-                  <div className="font-display text-sm font-bold text-brand-primary uppercase tracking-wider mb-1">
-                    {v.marca}
-                  </div>
-                  <h4 className="font-display text-xl text-white uppercase tracking-tight">
-                    {v.modelo}
-                  </h4>
-                  <p className="font-sans text-xs text-neutral-400 font-medium tracking-wide mt-1 uppercase">
-                    {v.version}
-                  </p>
-                </div>
-                
-                <div className="flex items-center justify-between border-t border-neutral-800/60 mt-6 pt-4">
-                  <div className="font-display text-2xl text-white">
-                    USD {v.precio.toLocaleString('de-DE')}
-                  </div>
-                  <div className="font-sans text-xs uppercase tracking-wider text-neutral-500">
-                    {v.kilometraje === 0 ? 'A Estrenar' : `${v.kilometraje.toLocaleString('de-DE')} KM`}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 

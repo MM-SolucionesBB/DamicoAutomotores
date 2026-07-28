@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { Vehicle } from '../types';
-import { Search, Filter, Calendar, Gauge, Info, X, Send, Landmark, ShieldCheck, Share2, ArrowLeft, FileText, Printer } from 'lucide-react';
+import { Search, Filter, Info, X, Send, Landmark, ShieldCheck, Share2, ArrowLeft, Printer, Calendar, Gauge, Fuel, Settings, Star } from 'lucide-react';
 import { AVAILABLE_BRANDS } from '../mockData';
 
 export const CatalogView: React.FC = () => {
@@ -556,19 +556,27 @@ export const CatalogView: React.FC = () => {
                     key={v.id}
                     onClick={() => {
                       setSelectedVehicleId(v.id);
-                      setDownPayment(Math.round(v.precio * 0.35)); // Pre fill 35%
+                      setDownPayment(Math.round(v.precio * 0.35));
                     }}
-                    className="cursor-pointer group flex flex-col bg-brand-card border border-neutral-800/80 hover:border-brand-primary hover:bg-brand-card/80 rounded-2xl overflow-hidden transition-all duration-300 shadow-md shadow-black"
+                    className="cursor-pointer group flex flex-col bg-brand-card border border-neutral-800/80 hover:border-neutral-700/80 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/40 rounded-2xl overflow-hidden transition-all duration-300"
                     id={`stock-unit-${v.id}`}
                   >
                     {/* Media segment */}
-                    <div className="relative aspect-video overflow-hidden bg-brand-dark">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-brand-dark">
                       <img 
                         src={v.imagen} 
                         alt={`${v.marca} ${v.modelo}`}
                         referrerPolicy="no-referrer"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="h-full w-full object-cover transition-all duration-500 group-hover:scale-[1.03]"
                       />
+                      {v.imagenesSecundarias?.[0] && (
+                        <img 
+                          src={v.imagenesSecundarias[0]} 
+                          alt={`${v.marca} ${v.modelo} vista secundaria`}
+                          referrerPolicy="no-referrer"
+                          className="absolute inset-0 h-full w-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        />
+                      )}
                       
                       {/* Floating tag state */}
                       <span className={`absolute top-3 left-3 font-sans text-[10px] font-bold uppercase tracking-wider py-1 px-2.5 rounded-full z-10 shadow-md ${
@@ -582,48 +590,55 @@ export const CatalogView: React.FC = () => {
                       </span>
 
                       {v.destacado && (
-                        <span className="absolute top-3 right-3 bg-brand-primary text-white font-display text-xs tracking-wider uppercase py-1 px-2.5 rounded-md shadow-md">
+                        <span className="absolute top-3 right-3 flex items-center gap-1.5 bg-brand-primary text-white font-display text-sm font-bold tracking-wider uppercase py-1.5 px-3.5 rounded z-10 shadow-lg">
+                          <Star className="h-4 w-4 fill-current" />
                           Destacado
                         </span>
                       )}
 
-                      <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-brand-card to-transparent"></div>
+                      <div className="absolute bottom-0 inset-x-0 h-[40%] bg-[linear-gradient(to_top,rgba(0,0,0,0.8)_0%,rgba(0,0,0,0.15)_25%,transparent_50%)]"></div>
                     </div>
 
                     {/* Metadata specs segment */}
                     <div className="p-5 flex flex-col justify-between flex-grow">
                       <div>
-                        <div className="flex items-center justify-between text-xs font-sans uppercase tracking-widest text-[#F5A396] font-bold mb-1">
-                          <span>{v.marca}</span>
-                          <span>{v.anio}</span>
-                        </div>
-                        <h2 className="font-display text-2xl text-white uppercase group-hover:text-brand-primary transition-colors tracking-tight">
-                          {v.modelo}
+                        <h2 className="font-display text-2xl font-bold text-white uppercase tracking-wide group-hover:text-brand-primary transition-colors duration-300">
+                          {v.marca} {v.modelo}
                         </h2>
-                        <p className="font-sans text-xs text-neutral-400 tracking-wide font-medium mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis uppercase">
+                        <p className="font-sans text-xs text-neutral-400 tracking-wide font-medium mt-1 whitespace-nowrap overflow-hidden text-ellipsis uppercase">
                           {v.version}
                         </p>
                       </div>
 
-                      {/* Pill features badges */}
-                      <div className="grid grid-cols-2 gap-2 mt-4 text-[10px] font-sans text-neutral-400 uppercase">
-                        <div className="flex items-center gap-1.5 bg-[#161616] border border-neutral-800/60 p-1.5 rounded-lg">
-                          <Gauge className="h-3.5 w-3.5 text-brand-primary shrink-0" />
-                          <span>{v.kilometraje === 0 ? 'A Estrenar' : `${v.kilometraje?.toLocaleString('de-DE')} KM`}</span>
+                      <div className="mt-4 pt-3 border-t border-neutral-800/60">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 mb-3">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-brand-primary/70 shrink-0" />
+                            <span className="font-sans text-xs text-neutral-300 uppercase tracking-wider">{v.anio}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Gauge className="h-4 w-4 text-brand-primary/70 shrink-0" />
+                            <span className="font-sans text-xs text-neutral-300 uppercase tracking-wider">
+                              {v.kilometraje === 0 ? '0 KM' : `${v.kilometraje?.toLocaleString('de-DE')} KM`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Fuel className="h-4 w-4 text-brand-primary/70 shrink-0" />
+                            <span className="font-sans text-xs text-neutral-300 uppercase tracking-wider">{v.combustible}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Settings className="h-4 w-4 text-brand-primary/70 shrink-0" />
+                            <span className="font-sans text-xs text-neutral-300 uppercase tracking-wider">{v.transmision}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-[#161616] border border-neutral-800/60 p-1.5 rounded-lg">
-                          <Calendar className="h-3.5 w-3.5 text-brand-primary shrink-0" />
-                          <span>{v.combustible} {v.transmision === 'Automática' ? 'AT' : 'MT'}</span>
+                        <div className="border-t border-neutral-800/60 pt-3 flex items-center justify-between">
+                          <div className="font-display text-[1.7rem] text-white">
+                            USD {v.precio.toLocaleString('de-DE')}
+                          </div>
+                          <span className="font-display text-xs uppercase tracking-wider text-brand-primary group-hover:translate-x-1 duration-300 transition-transform">
+                            Ver Detalle →
+                          </span>
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-neutral-800/60 mt-5 pt-4">
-                        <div className="font-display text-2xl text-white">
-                          USD {v.precio.toLocaleString('de-DE')}
-                        </div>
-                        <span className="font-display text-base uppercase tracking-wider text-brand-primary group-hover:translate-x-1 duration-300 transition-transform">
-                          Ver Detalle →
-                        </span>
                       </div>
                     </div>
                   </article>
