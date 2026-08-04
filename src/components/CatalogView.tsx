@@ -6,7 +6,6 @@
 import React, { useState, useMemo } from 'react';
 import { useInventory } from '../context/InventoryContext';
 import { Search, Filter, Info, Star } from 'lucide-react';
-import { AVAILABLE_BRANDS } from '../mockData';
 
 export const CatalogView: React.FC = () => {
   const {
@@ -16,7 +15,9 @@ export const CatalogView: React.FC = () => {
     bodyTypeFilter,
     setBodyTypeFilter,
     setActiveTab,
-    setSelectedVehicleId
+    setSelectedVehicleId,
+    brands,
+    bodyTypes
   } = useInventory();
 
   const [selectedBrand, setSelectedBrand] = useState('Todas');
@@ -164,7 +165,7 @@ export const CatalogView: React.FC = () => {
                 className="bg-[#111111] border border-neutral-800 rounded-xl p-2.5 text-xs text-white font-sans focus:outline-none focus:border-brand-primary/50 uppercase tracking-wider"
               >
                 <option value="Todas">Todas las marcas</option>
-                {AVAILABLE_BRANDS.map(b => (
+                {brands.map(b => (
                   <option key={b} value={b}>{b} ({brandsWithCount[b] || 0})</option>
                 ))}
               </select>
@@ -176,11 +177,9 @@ export const CatalogView: React.FC = () => {
                 className="bg-[#111111] border border-neutral-800 rounded-xl p-2.5 text-xs text-white font-sans focus:outline-none focus:border-brand-primary/50 uppercase tracking-wider"
               >
                 <option value="">Todas las carrocerías</option>
-                <option value="SUV">SUV</option>
-                <option value="Pick-up">Pick-up</option>
-                <option value="Sedan">Sedán</option>
-                <option value="Hatchback">Hatchback</option>
-                <option value="Premium">Deportivos</option>
+                {bodyTypes.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
               </select>
 
               {/* Transmission */}
@@ -203,6 +202,8 @@ export const CatalogView: React.FC = () => {
                 <option value="Todos">Combustible: Todos</option>
                 <option value="Nafta">Nafta</option>
                 <option value="Diesel">Diesel</option>
+                <option value="Nafta/GNC">Nafta/GNC</option>
+                <option value="Diesel/GNC">Diesel/GNC</option>
                 <option value="Híbrido">Híbrido</option>
                 <option value="Eléctrico">Eléctrico</option>
               </select>

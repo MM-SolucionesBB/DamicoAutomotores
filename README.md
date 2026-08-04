@@ -1,20 +1,70 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# D'Amico Automotores
 
-# Run and deploy your AI Studio app
+Portal web premium de venta de vehículos y panel de administración de stock.
 
-This contains everything you need to run your app locally.
+- **Lado usuario:** home, catálogo marketplace, detalle de vehículo y consignación (contacto por WhatsApp).
+- **Lado admin:** login + dashboard para publicar, editar, destacar y dar de baja unidades, con marcas y carrocerías dinámicas.
 
-View your app in AI Studio: https://ai.studio/apps/725906a1-126c-49c2-ab16-a0037564069d
+## Stack
 
-## Run Locally
+- Frontend: React 19 + Vite + Tailwind CSS 4 + Lucide icons
+- Backend: Express + Supabase (con fallback a `database.json` local)
+- Auth admin: JWT (con override por variables de entorno)
+- Hosting: Vercel (frontend estático + función serverless `/api`)
 
-**Prerequisites:**  Node.js
+## Desarrollo local
 
+```bash
+npm install
+npm run dev      # frontend en http://localhost:3000 + API en :3002
+npm run lint     # typecheck (tsc --noEmit)
+npm run build    # build de producción
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Configurar `.env`
+
+```bash
+cp .env.example .env
+```
+
+Completá los valores (Supabase, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD). Sin Supabase el backend funciona contra `database.json`.
+
+### Acceso al panel admin (local)
+
+Abrí `http://localhost:3000/?control-panel=true` (o `#control-panel`) y logueate con el email/contraseña de `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+
+- Para crear un admin local en `database.json`: `npm run seed-admin -- email password`
+
+## Deploy en Vercel
+
+1. **Supabase:** creá un proyecto y ejecutá `scripts/schema.sql` en el SQL Editor. Eso crea las tablas (`users`, `vehicles`, `consignments`) y siembra 8 vehículos + admin inicial.
+2. **Vercel:** importá el repositorio (framework preset: Vite).
+3. **Environment Variables** (Project > Settings > Environment Variables) — las mismas que en `.env`:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `JWT_SECRET`
+   - `ADMIN_EMAIL`
+   - `ADMIN_PASSWORD`
+   - (`VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` opcionales)
+4. Build command: `npm run build`. Output directory: `dist`. Vercel detecta `api/index.ts` como función serverless y `vercel.json` hace el fallback SPA.
+5. Deploy.
+
+> IMPORTANTE: en Vercel el filesystem es efímero. Sin Supabase configurado, los cambios del admin (agregar/editar/borrar unidades) no persisten entre deploys.
+
+### Acceso al panel admin (producción)
+
+`https://tudominio.com/?control-panel=true` → login con `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+
+## Estructura
+
+```
+api/index.ts               Función serverless (Express)
+server-app.ts              Backend Express (auth + CRUD vehicles/consignments)
+src/
+  App.tsx                  Router de tabs + deep linking #vehicle=id
+  components/              Vistas públicas y panel admin
+  context/                 AuthContext + InventoryContext (stock, filtros, listas dinámicas)
+  types.ts                 Tipos de dominio
+scripts/schema.sql         Esquema + seed de Supabase
+WALKTHROUGH.md             Registro detallado de cambios visuales y funcionales
+```

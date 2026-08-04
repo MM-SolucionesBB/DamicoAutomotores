@@ -6,8 +6,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useInventory } from '../context/InventoryContext';
-import { Vehicle, ConsignmentRequest } from '../types';
-import { Car, Landmark, Star, HelpCircle, Edit3, Trash2, Plus, LogOut, CheckCircle2, XCircle, Send, Search, Sparkles } from 'lucide-react';
+import { Car, Landmark, Star, Edit3, Trash2, Plus, LogOut, Search } from 'lucide-react';
 import { PublishForm } from './PublishForm';
 
 export const AdminDashboard: React.FC = () => {
@@ -16,22 +15,13 @@ export const AdminDashboard: React.FC = () => {
     vehicles, 
     deleteVehicle, 
     updateVehicle, 
-    consignments, 
-    updateConsignmentStatus,
-    updateConsignmentNotes,
     setAdminViewMode,
     setActiveTab 
   } = useInventory();
 
-  // State to hold typing internal notes
-  const [notesState, setNotesState] = useState<Record<string, string>>({});
-
   // Selected vehicle for edit (null means creating, undefined means not showing form)
   const [formMode, setFormMode] = useState<'create' | 'edit' | undefined>(undefined);
   const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
-
-  // Active section inside the panel
-  const [activeSegment, setActiveSegment] = useState<'inventory' | 'proposals'>('inventory');
 
   // Local Search term inside dashboard
   const [panelSearch, setPanelSearch] = useState('');
@@ -42,16 +32,14 @@ export const AdminDashboard: React.FC = () => {
     let totalValue = vehicles.reduce((sum, v) => sum + v.precio, 0);
     let featuredCount = vehicles.filter(v => v.destacado).length;
     let activeReservations = vehicles.filter(v => v.estado === 'Reservado').length;
-    let pendingProposals = consignments.filter(c => c.estado === 'Pendiente').length;
 
     return {
       totalStock,
       totalValue,
       featuredCount,
-      activeReservations,
-      pendingProposals
+      activeReservations
     };
-  }, [vehicles, consignments]);
+  }, [vehicles]);
 
   // Compute vehicles matching panel search text
   const filteredDashboardVehicles = useMemo(() => {
@@ -75,11 +63,7 @@ export const AdminDashboard: React.FC = () => {
     setFormMode('create');
   };
 
-  const handleTriggerMessage = (req: ConsignmentRequest) => {
-    const text = `Hola ${req.nombre}! Me comunico de D'Amico Automotores sobre tu consulta por el ${req.marca} ${req.modelo} (${req.anio}) cotizado en USD ${req.precioPretendido.toLocaleString('de-DE')}. Quisiera coordinar detalles para su revisión física.`;
-    const url = `https://api.whatsapp.com/send?phone=${req.celular}&text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-  };  return (
+  return (
     <div className="bg-brand-dark text-white min-h-[calc(100vh-5rem)] py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl w-full">
         
@@ -162,76 +146,48 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 4: Consignaciones */}
+          {/* Card 4: Reservados */}
           <div className="bg-brand-card/60 border border-neutral-900 p-5 rounded-2xl flex flex-col justify-between">
             <div className="flex items-center justify-between text-neutral-500 mb-4">
-              <HelpCircle className="h-5 w-5 text-[#F5A396]" />
-              <span className="font-sans text-[11px] uppercase tracking-wider font-bold">Propuestas</span>
+              <Star className="h-5 w-5 text-brand-accent" />
+              <span className="font-sans text-[11px] uppercase tracking-wider font-bold">Reservados</span>
             </div>
             <div>
               <span className="font-display text-4xl font-extrabold text-white block">
-                {consignments.length}
+                {stats.activeReservations}
               </span>
               <span className="font-sans text-[11px] text-neutral-500 mt-1 block uppercase">
-                {stats.pendingProposals} pendientes
+                Unidades con reserva
               </span>
             </div>
           </div>
 
         </div>
 
-        {/* Dashboard Navigation Segment & Search */}
+        {/* Dashboard Header & Search */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-900 mb-6 pb-2 gap-4">
           <div className="flex mb-0 space-x-6">
-            <button
-              onClick={() => setActiveSegment('inventory')}
-              className={`font-display text-xl uppercase tracking-wider pb-3 transition-colors relative cursor-pointer ${
-                activeSegment === 'inventory' ? 'text-brand-primary' : 'text-neutral-500 hover:text-neutral-300'
-              }`}
-              id="btn-segment-inventory"
-            >
+            <span className="font-display text-xl uppercase tracking-wider pb-3 text-brand-primary relative">
               Inventario de Stock ({vehicles.length})
-              {activeSegment === 'inventory' && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary"></span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveSegment('proposals')}
-              className={`font-display text-xl uppercase tracking-wider pb-3 transition-colors relative cursor-pointer flex items-center gap-1.5 ${
-                activeSegment === 'proposals' ? 'text-brand-primary' : 'text-neutral-500 hover:text-neutral-300'
-              }`}
-              id="btn-segment-proposals"
-            >
-              Propuestas de Clientes ({consignments.length})
-              {stats.pendingProposals > 0 && (
-                <span className="bg-brand-primary text-white font-sans text-xs font-bold leading-none rounded-full py-1 px-1.5">
-                  {stats.pendingProposals}
-                </span>
-              )}
-              {activeSegment === 'proposals' && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary"></span>
-              )}
-            </button>
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-primary"></span>
+            </span>
           </div>
 
-          {activeSegment === 'inventory' && (
-            <div className="relative bg-[#161616] border border-neutral-800 rounded-xl flex items-center p-1 font-sans w-full sm:max-w-xs mb-2">
-              <input 
-                type="text" 
-                placeholder="Filtrar por marca, modelo..."
-                value={panelSearch}
-                onChange={(e) => setPanelSearch(e.target.value)}
-                className="bg-transparent w-full text-xs py-1.5 px-3 focus:outline-none placeholder-neutral-600 text-white uppercase"
-                id="dash-search-input"
-              />
-              <Search className="h-4 w-4 text-neutral-500 mr-2" />
-            </div>
-          )}
+          <div className="relative bg-[#161616] border border-neutral-800 rounded-xl flex items-center p-1 font-sans w-full sm:max-w-xs mb-2">
+            <input 
+              type="text" 
+              placeholder="Filtrar por marca, modelo..."
+              value={panelSearch}
+              onChange={(e) => setPanelSearch(e.target.value)}
+              className="bg-transparent w-full text-xs py-1.5 px-3 focus:outline-none placeholder-neutral-600 text-white uppercase"
+              id="dash-search-input"
+            />
+            <Search className="h-4 w-4 text-neutral-500 mr-2" />
+          </div>
         </div>
 
-        {/* segment a: INVENTORY LIST TABLE */}
-        {activeSegment === 'inventory' && (
-          <div className="overflow-x-auto bg-brand-card/40 border border-neutral-900 rounded-2xl shadow-xl shadow-black">
+        {/* Inventory List Table */}
+        <div className="overflow-x-auto bg-brand-card/40 border border-neutral-900 rounded-2xl shadow-xl shadow-black">
             <table className="w-full text-left border-collapse" id="dash-inventory-table">
               <thead>
                 <tr className="border-b border-neutral-900 text-xs font-sans text-neutral-500 uppercase tracking-wider bg-brand-card/70 font-bold">
@@ -353,123 +309,6 @@ export const AdminDashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
-        )}
-
-        {/* segment b: CONSIGNMENT PROPOSALS LIST */}
-        {activeSegment === 'proposals' && (
-          <div className="space-y-4">
-            {consignments.length === 0 ? (
-              <div className="py-12 text-center bg-brand-card/40 border border-neutral-900 rounded-2xl text-neutral-500 font-bold uppercase text-xs">
-                Aún no se han recibido propuestas de consignación por parte de clientes.
-              </div>
-            ) : (
-              consignments.map(c => (
-                <div 
-                  key={c.id}
-                  className="bg-brand-card/60 border border-neutral-800 rounded-2xl p-6 flex flex-col gap-6"
-                  id={`prop-req-${c.id}`}
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-sans font-bold uppercase tracking-wider py-1 px-2.5 rounded-full ${
-                          c.estado === 'Pendiente'
-                            ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
-                            : c.estado === 'Aceptado'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : c.estado === 'Revisado'
-                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                        }`}>
-                          Propuesta {c.estado}
-                        </span>
-                        <span className="font-sans text-xs text-neutral-500 font-bold">
-                          {new Date(c.creadoEn).toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      <h3 className="font-display text-2xl text-white uppercase tracking-wider">
-                        {c.marca} {c.modelo} {c.version || ''} <span className="text-neutral-500 text-base">({c.anio})</span>
-                      </h3>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 text-xs font-sans text-neutral-400 uppercase">
-                        <div>
-                          <span className="text-neutral-500 block leading-none mb-1 font-bold">Precio sugerido</span>
-                          <strong className="text-emerald-400 font-display text-base">USD {c.precioPretendido.toLocaleString('de-DE')}</strong>
-                        </div>
-                        <div>
-                          <span className="text-neutral-500 block leading-none mb-1 font-bold">Kilometraje</span>
-                          <strong className="text-white text-base font-display">{c.kilometraje.toLocaleString('de-DE')} KM</strong>
-                        </div>
-                        <div>
-                          <span className="text-neutral-500 block leading-none mb-1 font-bold">Cliente</span>
-                          <strong className="text-white text-xs">{c.nombre}</strong>
-                        </div>
-                        <div>
-                          <span className="text-neutral-500 block leading-none mb-1 font-bold">WhatsApp</span>
-                          <strong className="text-white text-xs">{c.celular}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions buttons */}
-                    <div className="flex items-center gap-2 border-t md:border-t-0 border-neutral-900 pt-4 md:pt-0">
-                      <button
-                        onClick={() => handleTriggerMessage(c)}
-                        className="bg-[#161616] hover:bg-neutral-900 border border-neutral-800 text-white font-sans text-xs uppercase font-bold py-2.5 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
-                        id={`prop-wa-btn-${c.id}`}
-                      >
-                        <Send className="h-3.5 w-3.5 text-emerald-400" />
-                        Contactar
-                      </button>
-                      
-                      {c.estado === 'Pendiente' && (
-                        <>
-                          <button
-                            onClick={() => updateConsignmentStatus(c.id, 'Aceptado')}
-                            className="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-neutral-950 border border-emerald-500/20 py-2.5 px-4 rounded-xl text-center font-sans text-xs uppercase font-bold transition-all cursor-pointer"
-                            id={`prop-accept-${c.id}`}
-                          >
-                            Aceptar
-                          </button>
-                          <button
-                            onClick={() => updateConsignmentStatus(c.id, 'Rechazado')}
-                            className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/20 py-2.5 px-3 rounded-xl transition-all font-sans text-xs uppercase font-bold cursor-pointer"
-                            id={`prop-reject-${c.id}`}
-                          >
-                            Rechazar
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Notes Area CRM */}
-                  <div className="mt-2 pt-4 border-t border-neutral-900/60 w-full flex flex-col sm:flex-row gap-3 items-end">
-                    <div className="flex-grow">
-                      <label className="font-sans text-[10px] text-neutral-500 uppercase tracking-wider block mb-1.5 font-bold">Notas de Seguimiento Interno</label>
-                      <textarea
-                        placeholder="Escribí notas de seguimiento aquí... (ej: Cliente acepta peritaje, acordamos para el sábado)"
-                        value={notesState[c.id] !== undefined ? notesState[c.id] : (c.notasInternas || '')}
-                        onChange={(e) => setNotesState(prev => ({ ...prev, [c.id]: e.target.value }))}
-                        className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-xl p-3 focus:outline-none placeholder-neutral-600 text-white font-sans text-xs h-16 resize-none"
-                      />
-                    </div>
-                    <button
-                      onClick={() => {
-                        updateConsignmentNotes(c.id, notesState[c.id] !== undefined ? notesState[c.id] : (c.notasInternas || ''));
-                        alert('Nota guardada con éxito.');
-                      }}
-                      className="w-full sm:w-auto bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 hover:text-white px-5 py-3.5 rounded-xl text-xs uppercase font-bold shrink-0 transition-colors cursor-pointer h-[46px]"
-                    >
-                      Guardar Nota
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
 
       </div>
 

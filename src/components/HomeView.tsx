@@ -5,11 +5,10 @@
 
 import React, { useState } from 'react';
 import { useInventory } from '../context/InventoryContext';
-import { BODY_TYPES } from '../mockData';
 import { Search, Compass, Coins, Star, ChevronRight, ArrowUpRight, Calendar, Gauge, Fuel, Settings } from 'lucide-react';
 
 export const HomeView: React.FC = () => {
-  const { setActiveTab, setSearchFilter, setBodyTypeFilter, setSelectedVehicleId, vehicles } = useInventory();
+  const { setActiveTab, setSearchFilter, setBodyTypeFilter, setSelectedVehicleId, vehicles, bodyTypes } = useInventory();
   const [localSearch, setLocalSearch] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -72,14 +71,14 @@ export const HomeView: React.FC = () => {
 
           {/* Slashed Quick Filters Buttons */}
           <div className="mt-8 flex flex-wrap justify-center items-center gap-3">
-            {BODY_TYPES.map(type => (
+            {bodyTypes.map(b => (
               <button
-                key={type.id}
-                onClick={() => selectBodyStyle(type.id)}
+                key={b}
+                onClick={() => selectBodyStyle(b)}
                 className="font-display text-base tracking-wide uppercase border border-neutral-800 hover:border-brand-primary/50 hover:bg-brand-primary/5 text-neutral-300 hover:text-white rounded-lg py-2 px-4 transition-all duration-300"
-                id={`body-type-btn-${type.id}`}
+                id={`body-type-btn-${b}`}
               >
-                {type.label}
+                {b}
               </button>
             ))}
           </div>

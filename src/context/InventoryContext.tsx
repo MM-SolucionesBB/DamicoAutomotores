@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Vehicle, ConsignmentRequest, ActiveTab } from '../types';
-import { INITIAL_VEHICLES } from '../mockData';
+import { INITIAL_VEHICLES, AVAILABLE_BRANDS } from '../mockData';
 import { useAuth } from './AuthContext';
+
+export const DEFAULT_BODY_TYPES = ['SUV', 'Pick-up', 'Sedán', 'Hatchback', 'Deportivos'];
 
 interface InventoryContextProps {
   vehicles: Vehicle[];
@@ -12,6 +14,10 @@ interface InventoryContextProps {
   addConsignment: (req: Omit<ConsignmentRequest, 'id' | 'creadoEn' | 'estado'>) => void;
   updateConsignmentStatus: (id: string, status: ConsignmentRequest['estado']) => void;
   updateConsignmentNotes: (id: string, notes: string) => Promise<void>;
+  brands: string[];
+  addBrand: (name: string) => void;
+  bodyTypes: string[];
+  addBodyType: (name: string) => void;
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   adminViewMode: boolean;
@@ -37,6 +43,41 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [bodyTypeFilter, setBodyTypeFilter] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
+
+  const [brands, setBrands] = useState<string[]>(() => {
+    const custom = localStorage.getItem('damico_custom_brands');
+    const customList = custom ? JSON.parse(custom) : [];
+    return Array.from(new Set([...AVAILABLE_BRANDS, ...customList]));
+  });
+  const [bodyTypes, setBodyTypes] = useState<string[]>(() => {
+    const custom = localStorage.getItem('damico_custom_body_types');
+    const customList = custom ? JSON.parse(custom) : [];
+    return Array.from(new Set([...DEFAULT_BODY_TYPES, ...customList]));
+  });
+
+  const addBrand = useCallback((name: string) => {
+    const clean = name.trim();
+    if (!clean) return;
+    setBrands(prev => {
+      if (prev.includes(clean)) return prev;
+      const next = [...prev, clean];
+      const custom = next.filter(b => !AVAILABLE_BRANDS.includes(b));
+      localStorage.setItem('damico_custom_brands', JSON.stringify(custom));
+      return next;
+    });
+  }, []);
+
+  const addBodyType = useCallback((name: string) => {
+    const clean = name.trim();
+    if (!clean) return;
+    setBodyTypes(prev => {
+      if (prev.includes(clean)) return prev;
+      const next = [...prev, clean];
+      const custom = next.filter(b => !DEFAULT_BODY_TYPES.includes(b));
+      localStorage.setItem('damico_custom_body_types', JSON.stringify(custom));
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     fetchVehicles();
@@ -231,6 +272,14 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const setActiveTab = useCallback((tab: ActiveTab) => {
     setActiveTabInternal(tab);
+    if (tab !== 'admin' && tab !== 'login') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('control-panel') || url.hash === '#control-panel') {
+        url.searchParams.delete('control-panel');
+        if (url.hash === '#control-panel') url.hash = '';
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
@@ -245,6 +294,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addConsignment,
         updateConsignmentStatus,
         updateConsignmentNotes,
+        brands,
+        addBrand,
+        bodyTypes,
+        addBodyType,
         activeTab,
         setActiveTab,
         adminViewMode,

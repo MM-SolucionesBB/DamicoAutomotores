@@ -14,8 +14,8 @@ export interface Vehicle {
   motor: string;
   transmision: 'Manual' | 'Automática';
   traccion: '4x2' | '4x4' | 'AWD' | 'RWD';
-  combustible: 'Nafta' | 'Diesel' | 'Nafta/GNC' | 'Híbrido' | 'Eléctrico';
-  carroceria: 'SUV' | 'Pick-up' | 'Sedán' | 'Hatchback' | 'Deportivos';
+  combustible: 'Nafta' | 'Diesel' | 'Nafta/GNC' | 'Diesel/GNC' | 'Híbrido' | 'Eléctrico';
+  carroceria: string;
   imagen: string;
   imagenesSecundarias: string[];
   destacado: boolean;

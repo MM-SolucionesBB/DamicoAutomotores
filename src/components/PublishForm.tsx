@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useInventory } from '../context/InventoryContext';
-import { Vehicle } from '../types';
 import { X, Save, Image as ImageIcon, Camera, HelpCircle, FileText, Check, Trash2, Plus, Upload } from 'lucide-react';
-import { AVAILABLE_BRANDS } from '../mockData';
 
 // Image compression utility using HTML5 Canvas to keep base64 strings small (max 1200px width/height, quality 0.7)
 const compressImage = (file: File): Promise<string> => {
@@ -88,7 +86,7 @@ const PRESET_VEHICLE_IMAGES = [
 ];
 
 export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClose }) => {
-  const { vehicles, addVehicle, updateVehicle } = useInventory();
+  const { vehicles, addVehicle, updateVehicle, brands, addBrand, bodyTypes, addBodyType } = useInventory();
 
   // Primary States
   const [marca, setMarca] = useState('Ford');
@@ -100,15 +98,38 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
   const [motor, setMotor] = useState('');
   const [transmision, setTransmision] = useState<'Manual' | 'Automática'>('Automática');
   const [traccion, setTraccion] = useState<'4x2' | '4x4' | 'AWD' | 'RWD'>('4x4');
-  const [combustible, setCombustible] = useState<'Nafta' | 'Diesel' | 'Nafta/GNC' | 'Híbrido' | 'Eléctrico'>('Diesel');
-  const [carroceria, setCarroceria] = useState<Vehicle['carroceria']>('SUV');
+  const [combustible, setCombustible] = useState<'Nafta' | 'Diesel' | 'Nafta/GNC' | 'Diesel/GNC' | 'Híbrido' | 'Eléctrico'>('Diesel');
+  const [carroceria, setCarroceria] = useState<string>('SUV');
   const [imagen, setImagen] = useState('');
   const [imagenesSecundarias, setImagenesSecundarias] = useState<string[]>([]);
   const [destacado, setDestacado] = useState(false);
   const [estado, setEstado] = useState<'Disponible' | 'Reservado' | 'Vendido'>('Disponible');
 
+  const [showNewBrand, setShowNewBrand] = useState(false);
+  const [newBrand, setNewBrand] = useState('');
+  const [showNewBodyType, setShowNewBodyType] = useState(false);
+  const [newBodyType, setNewBodyType] = useState('');
+
   const mainImageInputRef = useRef<HTMLInputElement>(null);
   const secondaryImagesInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddNewBrand = () => {
+    const clean = newBrand.trim();
+    if (!clean) return;
+    addBrand(clean);
+    setMarca(clean);
+    setNewBrand('');
+    setShowNewBrand(false);
+  };
+
+  const handleAddNewBodyType = () => {
+    const clean = newBodyType.trim();
+    if (!clean) return;
+    addBodyType(clean);
+    setCarroceria(clean);
+    setNewBodyType('');
+    setShowNewBodyType(false);
+  };
 
   const handleMainImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -262,10 +283,40 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
                 className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-xl p-3 focus:outline-none text-white font-sans uppercase tracking-wider"
                 id="form-input-brand"
               >
-                {AVAILABLE_BRANDS.map(b => (
+                {brands.map(b => (
                   <option key={b} value={b}>{b}</option>
                 ))}
               </select>
+              {showNewBrand ? (
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="text"
+                    placeholder="Nueva marca..."
+                    value={newBrand}
+                    onChange={(e) => setNewBrand(e.target.value)}
+                    className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-lg p-2 focus:outline-none placeholder-neutral-600 text-white font-sans text-xs"
+                    id="form-input-new-brand"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddNewBrand}
+                    className="bg-brand-primary/10 border border-brand-primary/30 text-brand-primary font-sans text-[11px] uppercase font-bold px-3 rounded-lg hover:bg-brand-primary/20 transition-all cursor-pointer shrink-0"
+                    id="form-btn-confirm-new-brand"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowNewBrand(true)}
+                  className="mt-2 flex items-center gap-1 text-[11px] font-sans font-bold uppercase tracking-wider text-neutral-500 hover:text-brand-primary transition-colors cursor-pointer"
+                  id="form-btn-add-brand"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Agregar marca nueva
+                </button>
+              )}
             </div>
 
             {/* Modelo */}
@@ -348,12 +399,40 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
                 className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-xl p-3 focus:outline-none text-white font-sans uppercase tracking-wider"
                 id="form-input-body-type"
               >
-                <option value="SUV">SUV</option>
-                <option value="Pick-up">Pick-up</option>
-                <option value="Sedán">Sedán</option>
-                <option value="Hatchback">Hatchback</option>
-                <option value="Deportivos">Deportivos</option>
+                {bodyTypes.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
               </select>
+              {showNewBodyType ? (
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="text"
+                    placeholder="Nueva carrocería..."
+                    value={newBodyType}
+                    onChange={(e) => setNewBodyType(e.target.value)}
+                    className="w-full bg-[#161616] border border-neutral-800 focus:border-brand-primary rounded-lg p-2 focus:outline-none placeholder-neutral-600 text-white font-sans text-xs"
+                    id="form-input-new-body-type"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddNewBodyType}
+                    className="bg-brand-primary/10 border border-brand-primary/30 text-brand-primary font-sans text-[11px] uppercase font-bold px-3 rounded-lg hover:bg-brand-primary/20 transition-all cursor-pointer shrink-0"
+                    id="form-btn-confirm-new-body-type"
+                  >
+                    Guardar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowNewBodyType(true)}
+                  className="mt-2 flex items-center gap-1 text-[11px] font-sans font-bold uppercase tracking-wider text-neutral-500 hover:text-brand-primary transition-colors cursor-pointer"
+                  id="form-btn-add-body-type"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Agregar carrocería nueva
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -422,6 +501,7 @@ export const PublishForm: React.FC<PublishFormProps> = ({ mode, vehicleId, onClo
                 <option value="Diesel">Diesel</option>
                 <option value="Nafta">Nafta</option>
                 <option value="Nafta/GNC">Nafta/GNC</option>
+                <option value="Diesel/GNC">Diesel/GNC</option>
                 <option value="Híbrido">Híbrido</option>
                 <option value="Eléctrico">Eléctrico</option>
               </select>

@@ -49,10 +49,10 @@ Search, Compass, Coins, Star, ChevronRight, ArrowUpRight, Calendar, Gauge, Fuel,
 - **Click en card** → navega a `VehicleDetailView` (ya no abre modal)
 
 ### Filtros
-- Marca (select con conteo)
-- Carrocería (SUV, Pick-up, Sedán, Hatchback, Deportivos)
+- Marca (select con conteo, lista dinámica: incluye marcas agregadas por el admin)
+- Carrocería (lista dinámica: SUV, Pick-up, Sedán, Hatchback, Deportivos + las que agregue el admin)
 - Transmisión (Todas, Manual, Automática)
-- Combustible (Todos, Nafta, Diesel, Híbrido, Eléctrico)
+- Combustible (Todos, Nafta, Diesel, Nafta/GNC, Diesel/GNC, Híbrido, Eléctrico)
 - Precio quick filters (Todos, <25k, 25-50k, 50k+)
 - Botón "Limpiar" visible solo cuando hay filtros activos
 
@@ -152,7 +152,27 @@ Car, Sparkles, SendHorizontal
 
 ---
 
-## 7. Tipos de datos (`src/types.ts`)
+## 7. Panel Admin (`AdminDashboard.tsx` + `PublishForm.tsx`)
+
+### Cambios realizados
+- **Eliminada la sección de Propuestas** (lista de consignaciones, botones Aceptar/Rechazar, notas internas y el tab "Propuestas de Clientes")
+- **Eliminada la tarjeta de métrica "Propuestas"** → reemplazada por una tarjeta "Reservados" (`activeReservations`)
+- El panel ahora muestra únicamente: métricas (Stock, Valor, Destacados, Reservados) + tabla de Inventario con búsqueda
+
+### Marcas y carrocerías dinámicas
+- En `PublishForm` el admin puede **agregar marcas y carrocerías nuevas** ("Agregar marca nueva" / "Agregar carrocería nueva" debajo de cada select)
+- Las nuevas opciones se guardan en `localStorage` (`damico_custom_brands`, `damico_custom_body_types`) y se comparten con:
+  - El select de marca/carrocería del formulario
+  - El filtro de marca y carrocería del catálogo
+  - Los atajos de carrocería del home
+- Listas expuestas por `InventoryContext` (`brands`, `addBrand`, `bodyTypes`, `addBodyType`)
+
+### Combustibles
+- Opciones actuales: Diesel, Nafta, **Nafta/GNC**, **Diesel/GNC**, Híbrido, Eléctrico
+
+---
+
+## 8. Tipos de datos (`src/types.ts`)
 
 ```typescript
 type ActiveTab = 'home' | 'catalog' | 'consignment' | 'admin' | 'login' | 'vehicle-detail';
@@ -171,8 +191,8 @@ interface Vehicle {
   motor: string;
   transmision: 'Manual' | 'Automática';
   traccion: '4x2' | '4x4' | 'AWD' | 'RWD';
-  combustible: 'Nafta' | 'Diesel' | 'Nafta/GNC' | 'Híbrido' | 'Eléctrico';
-  carroceria: 'SUV' | 'Pick-up' | 'Sedán' | 'Hatchback' | 'Deportivos';
+  combustible: 'Nafta' | 'Diesel' | 'Nafta/GNC' | 'Diesel/GNC' | 'Híbrido' | 'Eléctrico';
+  carroceria: string;
   imagen: string;
   imagenesSecundarias: string[];
   destacado: boolean;
@@ -183,7 +203,7 @@ interface Vehicle {
 
 ---
 
-## 8. Número de WhatsApp
+## 9. Número de WhatsApp
 
 - **Número actual:** +54 9 2915 36-7498 (`5492915367498`)
 - **Archivos donde está configurado:**
@@ -193,10 +213,10 @@ interface Vehicle {
 
 ---
 
-## 9. Paleta de colores
+## 10. Paleta de colores
 - **Rojo principal:** `brand-primary` (#CC1818)
-- **Fondo oscuro:** `brand-dark`
-- **Cards:** `brand-card/40`
+- **Fondo oscuro:** `brand-dark` (#14161a, gris oscuro levemente más claro que el negro original)
+- **Cards:** `brand-card` (#1c1f25)
 - **Texto primario:** `white`
 - **Texto secundario:** `neutral-400`
 - **Texto specs:** `neutral-300`
@@ -205,7 +225,7 @@ interface Vehicle {
 
 ---
 
-## 10. Comandos útiles
+## 11. Comandos útiles
 ```bash
 npm run dev          # Arranca frontend + backend
 npm run lint         # Typecheck (tsc --noEmit)
@@ -214,14 +234,14 @@ npm run seed-admin   # Crear admin: npm run seed-admin -- email password
 
 ---
 
-## 11. Acceso admin
+## 12. Acceso admin
 - URL: `http://localhost:3000/#control-panel` o `?control-panel=true`
 - Email: `fededamico@admin.com` (definido en `.env`)
 - Credenciales de Supabase en `.env`
 
 ---
 
-## 12. Pendientes / Ideas futuras
+## 13. Pendientes / Ideas futuras
 - [ ] Crossfade con más de una imagen secundaria (actualmente solo usa `imagenesSecundarias[0]`)
 - [ ] Animación de entrada staggered para las tarjetas del marketplace
 - [ ] Lazy loading de imágenes
