@@ -74,7 +74,7 @@ export const Navigation: React.FC = () => {
         <div className="flex items-center space-x-4">
           {isAdminView && (
             <button
-              onClick={() => setView('home')}
+              onClick={() => window.open('/', '_blank', 'noopener,noreferrer')}
               className="flex items-center space-x-2 rounded-lg py-2 px-4 font-sans text-xs font-semibold uppercase tracking-wider transition-all duration-300 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 hover:bg-brand-primary/20 shadow-sm shadow-brand-primary/5 cursor-pointer"
               id="role-toggle-btn"
             >
