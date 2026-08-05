@@ -34,6 +34,8 @@ const MainAppContent: React.FC = () => {
         const vehicleId = hash.replace('#vehicle=', '');
         setSelectedVehicleId(vehicleId);
         setView('vehicle-detail');
+      } else {
+        setView('home');
       }
     };
     checkAdminUrl();

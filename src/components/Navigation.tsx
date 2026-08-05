@@ -5,12 +5,10 @@
 
 import React from 'react';
 import { useNavigation } from '../context/NavigationContext';
-import { useAuth } from '../context/AuthContext';
-import { Lock, Eye, LayoutDashboard } from 'lucide-react';
+import { Lock, Eye } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
   const { currentView, setView } = useNavigation();
-  const { isAuthenticated } = useAuth();
   const isAdminView = currentView === 'admin';
 
   return (
@@ -85,17 +83,6 @@ export const Navigation: React.FC = () => {
             </button>
           )}
 
-          {isAuthenticated && !isAdminView && (
-            <button
-              onClick={() => setView('admin')}
-              className="flex items-center space-x-2 rounded-lg py-2 px-4 font-sans text-xs font-semibold uppercase tracking-wider transition-all duration-300 bg-brand-card border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-700 cursor-pointer"
-              id="back-to-panel-btn"
-            >
-              <LayoutDashboard className="h-3.5 w-3.5" />
-              <span>Volver al panel</span>
-            </button>
-          )}
-
           {!isAdminView && (
             <button
               onClick={() => setView('catalog')}
@@ -141,15 +128,6 @@ export const Navigation: React.FC = () => {
             >
               <span className="font-display text-base tracking-wider">Vender</span>
             </button>
-            {isAuthenticated && (
-              <button
-                onClick={() => setView('admin')}
-                className={`flex flex-col items-center py-2 px-3 text-brand-primary`}
-                id="mobile-tab-panel-btn"
-              >
-                <span className="font-display text-base tracking-wider">Panel</span>
-              </button>
-            )}
           </>
         )}
       </div>
