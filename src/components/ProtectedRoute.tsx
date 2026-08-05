@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useInventory } from '../context/InventoryContext';
+import { useNavigation } from '../context/NavigationContext';
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { token, loading } = useAuth();
-  const { setActiveTab } = useInventory();
+  const { setView } = useNavigation();
 
   useEffect(() => {
     if (!loading && !token) {
-      setActiveTab('home');
+      setView('home');
     }
-  }, [token, loading, setActiveTab]);
+  }, [token, loading, setView]);
 
   if (loading) {
     return (

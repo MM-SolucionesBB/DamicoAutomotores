@@ -4,24 +4,26 @@
  */
 
 import React, { useState } from 'react';
+import { useNavigation } from '../context/NavigationContext';
 import { useInventory } from '../context/InventoryContext';
 import { Search, Compass, Coins, Star, ChevronRight, ArrowUpRight, Calendar, Gauge, Fuel, Settings } from 'lucide-react';
 
 export const HomeView: React.FC = () => {
-  const { setActiveTab, setSearchFilter, setBodyTypeFilter, setSelectedVehicleId, vehicles, bodyTypes } = useInventory();
+  const { setView, setSearchFilter, setBodyTypeFilter, setSelectedVehicleId } = useNavigation();
+  const { vehicles, bodyTypes } = useInventory();
   const [localSearch, setLocalSearch] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchFilter(localSearch);
     setBodyTypeFilter('');
-    setActiveTab('catalog');
+    setView('catalog');
   };
 
   const selectBodyStyle = (styleId: string) => {
     setBodyTypeFilter(styleId);
     setSearchFilter('');
-    setActiveTab('catalog');
+    setView('catalog');
   };
 
   // Get first 3 featured vehicles
@@ -96,7 +98,7 @@ export const HomeView: React.FC = () => {
             </h3>
           </div>
           <button 
-            onClick={() => { setSearchFilter(''); setBodyTypeFilter(''); setActiveTab('catalog'); }}
+            onClick={() => { setSearchFilter(''); setBodyTypeFilter(''); setView('catalog'); }}
             className="flex items-center space-x-1 font-display text-sm uppercase tracking-wider text-neutral-400 hover:text-white transition-colors cursor-pointer"
             id="see-all-featured-btn"
           >
@@ -110,7 +112,7 @@ export const HomeView: React.FC = () => {
           {featured.map(v => (
             <div
               key={v.id}
-              onClick={() => { setSelectedVehicleId(v.id); setActiveTab('vehicle-detail'); }}
+              onClick={() => { setSelectedVehicleId(v.id); setView('vehicle-detail'); }}
               className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl border border-neutral-800/80 bg-brand-card/40 hover:border-neutral-700/80 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/40 transition-all duration-300"
               id={`featured-card-${v.id}`}
             >
@@ -214,7 +216,7 @@ export const HomeView: React.FC = () => {
 
           {/* Path B: Quiero Vender */}
           <div 
-            onClick={() => setActiveTab('consignment')}
+            onClick={() => setView('consignment')}
             className="group relative cursor-pointer overflow-hidden rounded-2xl border border-neutral-800 bg-brand-card/40 p-6 hover:bg-brand-card/70 transition-all duration-500 flex flex-col justify-between min-h-[250px] shadow-lg hover:shadow-2xl shadow-black hover:border-brand-primary/20"
             id="pathway-sell-card"
           >

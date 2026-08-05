@@ -4,18 +4,21 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { useNavigation } from '../context/NavigationContext';
 import { useInventory } from '../context/InventoryContext';
 import { Search, Filter, Info, Star } from 'lucide-react';
 
 export const CatalogView: React.FC = () => {
   const {
-    vehicles,
     searchFilter,
     setSearchFilter,
     bodyTypeFilter,
     setBodyTypeFilter,
-    setActiveTab,
-    setSelectedVehicleId,
+    setView,
+    setSelectedVehicleId
+  } = useNavigation();
+  const {
+    vehicles,
     brands,
     bodyTypes
   } = useInventory();
@@ -94,7 +97,7 @@ export const CatalogView: React.FC = () => {
 
   const openVehicleDetail = (vehicleId: string) => {
     setSelectedVehicleId(vehicleId);
-    setActiveTab('vehicle-detail');
+    setView('vehicle-detail');
   };
 
   return (

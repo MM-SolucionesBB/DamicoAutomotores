@@ -6,17 +6,17 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useInventory } from '../context/InventoryContext';
+import { useNavigation } from '../context/NavigationContext';
 import { Car, Landmark, Star, Edit3, Trash2, Plus, LogOut, Search } from 'lucide-react';
 import { PublishForm } from './PublishForm';
 
 export const AdminDashboard: React.FC = () => {
   const { signOut } = useAuth();
+  const { setView } = useNavigation();
   const { 
     vehicles, 
     deleteVehicle, 
-    updateVehicle, 
-    setAdminViewMode,
-    setActiveTab 
+    updateVehicle 
   } = useInventory();
 
   // Selected vehicle for edit (null means creating, undefined means not showing form)
@@ -91,7 +91,7 @@ export const AdminDashboard: React.FC = () => {
               Publicar Nuevo Vehículo
             </button>
             <button
-              onClick={async () => { await signOut(); setAdminViewMode(false); setActiveTab('home'); }}
+              onClick={async () => { await signOut(); setView('home'); }}
               className="border border-neutral-800 hover:border-neutral-700 bg-neutral-900/40 text-neutral-400 hover:text-white font-sans text-xs uppercase font-bold tracking-wider py-3 px-4 rounded-xl transition-colors shrink-0 cursor-pointer flex items-center gap-1.5"
               id="dash-exit-btn"
             >

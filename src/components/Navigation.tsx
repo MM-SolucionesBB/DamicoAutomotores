@@ -4,11 +4,14 @@
  */
 
 import React from 'react';
-import { useInventory } from '../context/InventoryContext';
-import { Lock, Eye } from 'lucide-react';
+import { useNavigation } from '../context/NavigationContext';
+import { useAuth } from '../context/AuthContext';
+import { Lock, Eye, LayoutDashboard } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
-  const { activeTab, setActiveTab, adminViewMode, setAdminViewMode } = useInventory();
+  const { currentView, setView } = useNavigation();
+  const { isAuthenticated } = useAuth();
+  const isAdminView = currentView === 'admin';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-neutral-900 bg-brand-dark/95 backdrop-blur-md">
@@ -16,7 +19,7 @@ export const Navigation: React.FC = () => {
         
         {/* Logo Section */}
         <div 
-          onClick={() => { setActiveTab('home'); setAdminViewMode(false); }}
+          onClick={() => setView('home')}
           className="cursor-pointer transition-transform hover:scale-[1.02] py-2"
           id="nav-logo-btn"
         >
@@ -24,12 +27,12 @@ export const Navigation: React.FC = () => {
         </div>
 
         {/* Navigation Tabs - Client Mode */}
-        {!adminViewMode ? (
+        {!isAdminView ? (
           <nav className="hidden md:flex items-center space-x-8">
             <button
-              onClick={() => setActiveTab('home')}
+              onClick={() => setView('home')}
               className={`font-display text-lg tracking-wider uppercase transition-all duration-300 ${
-                activeTab === 'home'
+                currentView === 'home'
                   ? 'text-brand-primary'
                   : 'text-neutral-400 hover:text-white'
               }`}
@@ -38,9 +41,9 @@ export const Navigation: React.FC = () => {
               Inicio
             </button>
             <button
-              onClick={() => setActiveTab('catalog')}
+              onClick={() => setView('catalog')}
               className={`font-display text-lg tracking-wider uppercase transition-all duration-300 ${
-                activeTab === 'catalog'
+                currentView === 'catalog'
                   ? 'text-brand-primary'
                   : 'text-neutral-400 hover:text-white'
               }`}
@@ -49,9 +52,9 @@ export const Navigation: React.FC = () => {
               Catálogo
             </button>
             <button
-              onClick={() => setActiveTab('consignment')}
+              onClick={() => setView('consignment')}
               className={`font-display text-lg tracking-wider uppercase transition-all duration-300 ${
-                activeTab === 'consignment'
+                currentView === 'consignment'
                   ? 'text-brand-primary'
                   : 'text-neutral-400 hover:text-white'
               }`}
@@ -69,11 +72,11 @@ export const Navigation: React.FC = () => {
           </div>
         )}
 
-        {/* Role Switcher & Action BTN */}
+        {/* Action Buttons */}
         <div className="flex items-center space-x-4">
-          {adminViewMode && (
+          {isAdminView && (
             <button
-              onClick={() => window.open(window.location.origin, '_blank')}
+              onClick={() => setView('home')}
               className="flex items-center space-x-2 rounded-lg py-2 px-4 font-sans text-xs font-semibold uppercase tracking-wider transition-all duration-300 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 hover:bg-brand-primary/20 shadow-sm shadow-brand-primary/5 cursor-pointer"
               id="role-toggle-btn"
             >
@@ -82,9 +85,20 @@ export const Navigation: React.FC = () => {
             </button>
           )}
 
-          {!adminViewMode && (
+          {isAuthenticated && !isAdminView && (
             <button
-              onClick={() => setActiveTab('catalog')}
+              onClick={() => setView('admin')}
+              className="flex items-center space-x-2 rounded-lg py-2 px-4 font-sans text-xs font-semibold uppercase tracking-wider transition-all duration-300 bg-brand-card border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-700 cursor-pointer"
+              id="back-to-panel-btn"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              <span>Volver al panel</span>
+            </button>
+          )}
+
+          {!isAdminView && (
+            <button
+              onClick={() => setView('catalog')}
               className="hidden lg:flex items-center justify-center rounded-lg bg-brand-primary py-2.5 px-5 font-display text-sm tracking-wide uppercase text-white transition-all duration-300 hover:bg-brand-primary/95 hover:scale-[1.02] hover:shadow-lg hover:shadow-brand-primary/20 cursor-pointer"
               id="nav-catalog-cta-btn"
             >
@@ -96,38 +110,47 @@ export const Navigation: React.FC = () => {
 
       {/* Mobile Nav Drawer helper (bottom bar / float bar on small devices) */}
       <div className="md:hidden flex border-t border-neutral-900 bg-brand-dark py-1 justify-around text-center w-full">
-        {!adminViewMode ? (
-          <>
-            <button
-              onClick={() => setActiveTab('home')}
-              className={`flex flex-col items-center py-2 px-3 ${activeTab === 'home' ? 'text-brand-primary font-bold' : 'text-neutral-400'}`}
-              id="mobile-tab-home-btn"
-            >
-              <span className="font-display text-base tracking-wider">Inicio</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('catalog')}
-              className={`flex flex-col items-center py-2 px-3 ${activeTab === 'catalog' ? 'text-brand-primary font-bold' : 'text-neutral-400'}`}
-              id="mobile-tab-catalog-btn"
-            >
-              <span className="font-display text-base tracking-wider">Catálogo</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('consignment')}
-              className={`flex flex-col items-center py-2 px-3 ${activeTab === 'consignment' ? 'text-brand-primary font-bold' : 'text-neutral-400'}`}
-              id="mobile-tab-consign-btn"
-            >
-              <span className="font-display text-base tracking-wider">Vender</span>
-            </button>
-          </>
-        ) : (
+        {isAdminView ? (
           <button
-            onClick={() => { setActiveTab('admin'); }}
+            onClick={() => { setView('admin'); }}
             className={`flex flex-col items-center py-2 px-3 text-brand-primary`}
             id="mobile-tab-admin-btn"
           >
             <span className="font-display text-base tracking-wider">Dashboard Control</span>
           </button>
+        ) : (
+          <>
+            <button
+              onClick={() => setView('home')}
+              className={`flex flex-col items-center py-2 px-3 ${currentView === 'home' ? 'text-brand-primary font-bold' : 'text-neutral-400'}`}
+              id="mobile-tab-home-btn"
+            >
+              <span className="font-display text-base tracking-wider">Inicio</span>
+            </button>
+            <button
+              onClick={() => setView('catalog')}
+              className={`flex flex-col items-center py-2 px-3 ${currentView === 'catalog' ? 'text-brand-primary font-bold' : 'text-neutral-400'}`}
+              id="mobile-tab-catalog-btn"
+            >
+              <span className="font-display text-base tracking-wider">Catálogo</span>
+            </button>
+            <button
+              onClick={() => setView('consignment')}
+              className={`flex flex-col items-center py-2 px-3 ${currentView === 'consignment' ? 'text-brand-primary font-bold' : 'text-neutral-400'}`}
+              id="mobile-tab-consign-btn"
+            >
+              <span className="font-display text-base tracking-wider">Vender</span>
+            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => setView('admin')}
+                className={`flex flex-col items-center py-2 px-3 text-brand-primary`}
+                id="mobile-tab-panel-btn"
+              >
+                <span className="font-display text-base tracking-wider">Panel</span>
+              </button>
+            )}
+          </>
         )}
       </div>
     </header>

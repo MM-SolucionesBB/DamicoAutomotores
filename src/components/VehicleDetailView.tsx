@@ -4,12 +4,14 @@
  */
 
 import React, { useState } from 'react';
+import { useNavigation } from '../context/NavigationContext';
 import { useInventory } from '../context/InventoryContext';
 import { Vehicle } from '../types';
 import { ArrowLeft, Send, Share2, Calendar, Gauge, Fuel, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const VehicleDetailView: React.FC = () => {
-  const { vehicles, selectedVehicleId, setActiveTab } = useInventory();
+  const { selectedVehicleId, setView } = useNavigation();
+  const { vehicles } = useInventory();
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   const vehicle = vehicles.find(v => v.id === selectedVehicleId) || null;
@@ -20,7 +22,7 @@ export const VehicleDetailView: React.FC = () => {
         <div className="text-center">
           <p className="font-sans text-neutral-400 mb-4">No se encontró el vehículo.</p>
           <button
-            onClick={() => setActiveTab('catalog')}
+            onClick={() => setView('catalog')}
             className="bg-brand-primary hover:bg-brand-primary/90 text-white font-display text-sm uppercase tracking-wider py-2.5 px-6 rounded-lg transition-all cursor-pointer"
           >
             Volver al Catálogo
@@ -46,7 +48,7 @@ export const VehicleDetailView: React.FC = () => {
       <div className="border-b border-neutral-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <button
-            onClick={() => setActiveTab('catalog')}
+            onClick={() => setView('catalog')}
             className="flex items-center gap-2 font-display text-sm uppercase tracking-wider text-neutral-400 hover:text-white transition-colors cursor-pointer"
             id="back-to-catalog-btn"
           >

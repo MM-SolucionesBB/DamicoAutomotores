@@ -5,7 +5,8 @@
 
 import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { InventoryProvider, useInventory } from './context/InventoryContext';
+import { NavigationProvider, useNavigation } from './context/NavigationContext';
+import { InventoryProvider } from './context/InventoryContext';
 import { Navigation } from './components/Navigation';
 import { HomeView } from './components/HomeView';
 import { CatalogView } from './components/CatalogView';
@@ -17,7 +18,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Car, Sparkles, SendHorizontal } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
-  const { activeTab, adminViewMode, setActiveTab, setSelectedVehicleId } = useInventory();
+  const { currentView, setView, setSelectedVehicleId } = useNavigation();
   const { token } = useAuth();
 
   React.useEffect(() => {
@@ -25,20 +26,20 @@ const MainAppContent: React.FC = () => {
       const hash = window.location.hash;
       if (hash === '#control-panel' || window.location.search.includes('control-panel=true')) {
         if (token) {
-          setActiveTab('admin');
+          setView('admin');
         } else {
-          setActiveTab('login');
+          setView('login');
         }
       } else if (hash.startsWith('#vehicle=')) {
         const vehicleId = hash.replace('#vehicle=', '');
         setSelectedVehicleId(vehicleId);
-        setActiveTab('vehicle-detail');
+        setView('vehicle-detail');
       }
     };
     checkAdminUrl();
     window.addEventListener('hashchange', checkAdminUrl);
     return () => window.removeEventListener('hashchange', checkAdminUrl);
-  }, [setActiveTab, setSelectedVehicleId, token]);
+  }, [setView, setSelectedVehicleId, token]);
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-dark text-white selection:bg-brand-primary selection:text-white font-sans">
@@ -48,12 +49,12 @@ const MainAppContent: React.FC = () => {
 
       {/* Main Container Core Router */}
       <main className="flex-grow">
-        {activeTab === 'home' && <HomeView />}
-        {activeTab === 'catalog' && <CatalogView />}
-        {activeTab === 'vehicle-detail' && <VehicleDetailView />}
-        {activeTab === 'consignment' && <ConsignmentView />}
-        {activeTab === 'login' && <LoginPage />}
-        {activeTab === 'admin' && (
+        {currentView === 'home' && <HomeView />}
+        {currentView === 'catalog' && <CatalogView />}
+        {currentView === 'vehicle-detail' && <VehicleDetailView />}
+        {currentView === 'consignment' && <ConsignmentView />}
+        {currentView === 'login' && <LoginPage />}
+        {currentView === 'admin' && (
           <ProtectedRoute>
             <AdminDashboard />
           </ProtectedRoute>
@@ -61,7 +62,7 @@ const MainAppContent: React.FC = () => {
       </main>
 
       {/* CTA Banner */}
-      {!adminViewMode && activeTab !== 'login' && activeTab !== 'admin' && (
+      {currentView !== 'login' && currentView !== 'admin' && (
         <section className="py-8">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
             <a
@@ -78,7 +79,7 @@ const MainAppContent: React.FC = () => {
       )}
 
       {/* Luxury Footer (Only visible on Client Public views, hidden on administrative board for cleaner density) */}
-      {!adminViewMode && (
+      {currentView !== 'login' && currentView !== 'admin' && (
         <footer className="bg-brand-dark border-t border-neutral-900 pt-16 pb-8" id="system-luxury-footer">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
 
@@ -129,9 +130,11 @@ const MainAppContent: React.FC = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <InventoryProvider>
-        <MainAppContent />
-      </InventoryProvider>
+      <NavigationProvider>
+        <InventoryProvider>
+          <MainAppContent />
+        </InventoryProvider>
+      </NavigationProvider>
     </AuthProvider>
   );
 }

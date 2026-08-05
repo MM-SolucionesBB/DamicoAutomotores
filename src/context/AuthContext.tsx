@@ -8,6 +8,7 @@ export interface User {
 interface AuthContextProps {
   user: User | null;
   token: string | null;
+  isAuthenticated: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -71,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

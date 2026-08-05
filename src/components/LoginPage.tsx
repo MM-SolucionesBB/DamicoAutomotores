@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useInventory } from '../context/InventoryContext';
+import { useNavigation } from '../context/NavigationContext';
 import { Car, Lock, Mail, AlertCircle } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { signIn } = useAuth();
-  const { setActiveTab, setAdminViewMode } = useInventory();
+  const { setView } = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -20,8 +20,7 @@ export const LoginPage: React.FC = () => {
     if (err) {
       setError(err);
     } else {
-      setAdminViewMode(true);
-      setActiveTab('admin');
+      setView('admin');
     }
   };
 
